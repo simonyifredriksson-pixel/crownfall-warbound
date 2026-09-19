@@ -849,6 +849,11 @@ body{ user-select:none; cursor:default }
   border-top:1px solid #ffffff10; font-size:9.5px; color:var(--iron-lo);
 }
 .cp-keys span{ display:flex; align-items:center; gap:3px }
+.cp-view{
+  display:flex; align-items:center; gap:5px; padding:5px 9px 7px;
+  border-top:1px solid #ffffff10; font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--sky);
+}
 .cp-keys .kbd,.cp-key .kbd{
   min-width:15px; height:15px; padding:0 3px; font-size:9px; border-radius:3px;
   display:inline-grid; place-items:center; background:#2a2f3a; color:var(--vel-2);

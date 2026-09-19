@@ -37,25 +37,39 @@ import { clamp, damp, angleDelta, TAU } from './Util.js';
    of these with the mouse; switching preset re-aims, it does not take control
    away. */
 export const CAM_PRESETS = {
+  /* Close over-the-shoulder. `shoulder` slides the whole rig sideways so the
+     character sits off-centre instead of standing in front of the crosshair —
+     at these distances a centred camera means you spend the fight looking at
+     the back of your own helmet. */
   hub: {
-    dist: 8.5, minDist: 3.5, maxDist: 16,
-    pitch: 0.30, minPitch: -0.30, maxPitch: 1.15,
-    focusHeight: 1.45, lead: 0,
+    dist: 6.0, minDist: 2.4, maxDist: 16,
+    pitch: 0.26, minPitch: -0.30, maxPitch: 1.15,
+    focusHeight: 1.42, lead: 0, shoulder: 0.78,
     focusRate: 14, angleRate: 26, distRate: 12,
   },
   commander: {
-    dist: 9.5, minDist: 4.5, maxDist: 18,
-    pitch: 0.28, minPitch: -0.25, maxPitch: 1.15,
-    focusHeight: 1.6, lead: 0,
-    focusRate: 13, angleRate: 26, distRate: 12,
+    // The default battle view. You are a person on that field, so the camera
+    // sits where a person's camera sits: just behind the shoulder, close
+    // enough that armour, weapons and the swing of a sword all read.
+    //
+    // `shoulder` is tuned against the CROSSHAIR, not against how the pose
+    // looks: at 4.8m a character that is even slightly centred stands in
+    // front of the reticle, and then every deployment and every attack is
+    // aimed at the back of your own helmet.
+    dist: 4.8, minDist: 2.2, maxDist: 15,
+    pitch: 0.17, minPitch: -0.30, maxPitch: 1.18,
+    focusHeight: 1.58, lead: 0, shoulder: 1.25,
+    focusRate: 16, angleRate: 26, distRate: 12,
   },
   tactical: {
-    // Aimed so the midfield fills the frame: the fight happens 20-50m ahead of
-    // your banner, so the view leads well forward and sits shallower than a
-    // straight top-down, which wasted most of the screen on empty grass.
-    dist: 33, minDist: 14, maxDist: 54,
-    pitch: 0.78, minPitch: 0.30, maxPitch: 1.28,
-    focusHeight: 1.0, lead: 0.62,
+    // The overview, on Tab. It has to show the LINE — yours and theirs — so
+    // it looks down more steeply than a follow camera and leads less far
+    // forward than it used to. At a shallower angle the top half of the frame
+    // was sky beyond the end of the field, which is a lot of screen spent on
+    // nothing.
+    dist: 31, minDist: 14, maxDist: 54,
+    pitch: 0.92, minPitch: 0.34, maxPitch: 1.28,
+    focusHeight: 1.0, lead: 0.46, shoulder: 0,
     focusRate: 9, angleRate: 24, distRate: 10,
   },
 };
@@ -293,9 +307,18 @@ export class CameraRig {
     // pushed forward a little in the overhead preset so you see the ground
     // ahead of you rather than the top of your own head
     const lead = p.lead * this.curDist;
-    const ax = this.curFocus.x + f.x * lead;
+
+    /* Shoulder offset. The aim point AND the camera slide the same distance
+       along screen-right, so the view stays parallel and the character simply
+       sits off to one side. Offsetting only the camera would swing the aim
+       across the character and make the crosshair lie about where a shot or a
+       deployment is going to land. */
+    const sh = p.shoulder || 0;
+    const rx = -Math.cos(this.curYaw), rz = Math.sin(this.curYaw);
+
+    const ax = this.curFocus.x + f.x * lead + rx * sh;
     const ay = this.curFocus.y + p.focusHeight;
-    const az = this.curFocus.z + f.z * lead;
+    const az = this.curFocus.z + f.z * lead + rz * sh;
 
     let horiz = this.curDist * cosP;
     let vert = this.curDist * sinP;

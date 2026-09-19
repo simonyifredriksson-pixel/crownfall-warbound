@@ -440,10 +440,13 @@ class Game {
 
     this.hud = new BattleHud(this.battle, this.camera);
 
-    // Start looking DOWN the field at the enemy. The old rig put the camera on
-    // the far side facing back at your own banner, with the enemy off-screen
-    // behind you — which is most of why battles were unplayable.
-    this.camView = 'tactical';
+    /* Start CLOSE, over the commander's shoulder.
+       You are a person on that field, not a general looking at a map, so the
+       battle opens at the distance you will actually fight at. Tab lifts to
+       the tactical overview when you need to see the whole line — it is one
+       key, and the HUD says so. */
+    this.camView = 'commander';
+    this.battle.cameraView = 'commander';
     const f = this.battle.field;
     this.cam.setBounds({ x0: -f.W / 2 - 6, x1: f.W / 2 + 6, z0: -f.L / 2 - 10, z1: f.L / 2 + 10 });
     this.cam.setProbe((x, z) => f.heightAt(x, z));
@@ -455,7 +458,7 @@ class Game {
     this.cam.reset({
       x: this.battle.player.x, y: 0, z: this.battle.player.z,
       yaw: 0,                      // yaw 0 faces +Z, and the enemy is at +Z
-      preset: 'tactical',
+      preset: 'commander',
     });
     UI.showTopbar(false);
     input.blocked = false;
@@ -541,6 +544,8 @@ class Game {
       if (input.pressed('Tab')) {
         this.camView = this.camView === 'tactical' ? 'commander' : 'tactical';
         this.cam.applyPreset(this.camView, false);   // keeps the player's yaw
+        // the HUD reads this to label the Tab key with the view you would GET
+        b.cameraView = this.camView;
         audio.play('ui.click');
       }
     }

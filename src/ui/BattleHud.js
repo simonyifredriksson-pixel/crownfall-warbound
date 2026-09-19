@@ -110,6 +110,7 @@ export class BattleHud {
           <span><span class="kbd">B</span>advance</span><span><span class="kbd">N</span>charge</span>
           <span><span class="kbd">M</span>back</span>
         </div>
+        <div class="cp-view"><span class="kbd">Tab</span><span id="h-cmd-view">Overview</span></div>
       </div>
       <div class="orderflash" id="h-orderflash"></div>
     `;
@@ -441,6 +442,11 @@ export class BattleHud {
 
     this.$('h-cmd-panel').classList.toggle('hidden', !live.length);
     if (!live.length) return;
+
+    // Tab is the only way back out to the overview, so the panel names the
+    // view you would GET, not the one you are in.
+    const vw = this.$('h-cmd-view');
+    if (vw) vw.textContent = this.b.cameraView === 'tactical' ? 'Close view' : 'Overview';
 
     this.$('h-cmd-sel').textContent = sel ? `${sel.name} squad` : `Whole army — ${live.length} squads`;
     this.$('h-cmd-form').textContent = getFormation(sel ? sel.formationId : army.formationId).name;
