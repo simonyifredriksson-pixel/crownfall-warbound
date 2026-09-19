@@ -18,6 +18,7 @@ import { activeDeckSynergies } from '../data/Synergies.js';
 import { resolveEvent } from '../game/Progression.js';
 import { audio } from '../core/Audio.js';
 import { esc, commas, formatNum, clamp, makeRng } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 let region = null;
 
@@ -29,7 +30,7 @@ export const ScreenMap = {
     if (!State.regionUnlocked(region)) region = 'greenmarch';
 
     const parts = ui.scaffold(el, {
-      icon: '🗺',
+      icon: ic('map'),
       title: 'The War Map',
       blurb: 'Every node is a choice. Some of them are fights.',
     });
@@ -110,18 +111,18 @@ function buildMap(body, ui) {
   const legend = document.createElement('div');
   legend.className = 'rowflex gap6 mt10';
   legend.innerHTML = `
-    <span class="chip">⚔ Battle</span>
-    <span class="chip">🎖 Elite — harder, better rewards</span>
-    <span class="chip">👑 Boss — has a stated mechanic</span>
-    <span class="chip">🧭 Explore — a choice, not a fight</span>
-    <span class="chip">📦 Cache — repeatable materials</span>
-    <span class="chip">🔥 Camp — a story beat</span>`;
+    <span class="chip">${ic('swords')} Battle</span>
+    <span class="chip">${ic('medal')} Elite — harder, better rewards</span>
+    <span class="chip">${ic('crown')} Boss — has a stated mechanic</span>
+    <span class="chip">${ic('compass')} Explore — a choice, not a fight</span>
+    <span class="chip">${ic('crate')} Cache — repeatable materials</span>
+    <span class="chip">${ic('flame')} Camp — a story beat</span>`;
   body.appendChild(legend);
 }
 
 function nodeIcon(n) {
   if (n.icon) return n.icon;
-  return { battle: '⚔', elite: '🎖', boss: '👑', explore: '🧭', cache: '📦', camp: '🔥', endless: '♾' }[n.type] || '⚔';
+  return { battle: ic('swords'), elite: ic('medal'), boss: ic('crown'), explore: ic('compass'), cache: ic('crate'), camp: ic('flame'), endless: ic('infinity') }[n.type] || ic('swords');
 }
 
 function drawPaths(canvas, wrap, reg, state) {
@@ -218,7 +219,7 @@ function buildBriefing(body, foot, node, reg, ui) {
       const el = document.createElement('div');
       el.className = 'eunit';
       el.style.setProperty('--rc', RARITY[u.rarity].color);
-      el.innerHTML = `<span>${ROLE_INFO[u.role]?.icon || '⚔'}</span><span>${esc(u.name)}</span>
+      el.innerHTML = `<span>${ROLE_INFO[u.role]?.icon || ic('swords')}</span><span>${esc(u.name)}</span>
         <span class="eq">${u.armorType}</span>`;
       el.dataset.tip = 'card:' + id + ':' + level;
       roster.appendChild(el);
@@ -254,7 +255,7 @@ function buildBriefing(body, foot, node, reg, ui) {
     m.className = 'threatbox mb10';
     m.style.borderColor = 'var(--gold-lo)';
     m.style.background = 'linear-gradient(90deg,rgba(217,164,65,.2),rgba(15,17,22,.9))';
-    m.innerHTML = `<div style="font-size:24px">👑</div>
+    m.innerHTML = `<div style="font-size:24px">${ic('crown')}</div>
       <div><div class="tl" style="color:var(--gold-hi)">The Mechanic</div><div class="small">${esc(node.mechanic)}</div></div>`;
     left.appendChild(m);
   }
@@ -296,11 +297,11 @@ function buildBriefing(body, foot, node, reg, ui) {
   const rwEl = document.createElement('div');
   rwEl.className = 'matlist';
   rwEl.innerHTML = [
-    rw.gold ? `<span class="mat">🪙 ~${formatNum(rw.gold)}</span>` : '',
-    rw.xp ? `<span class="mat">✦ ${formatNum(rw.xp)} xp</span>` : '',
-    rw.shards ? `<span class="mat">🔷 ~${rw.shards}</span>` : '',
-    rw.scroll ? `<span class="mat">📜 ${rw.scroll}</span>` : '',
-    rw.warSeal ? `<span class="mat">🎖 ${rw.warSeal}</span>` : '',
+    rw.gold ? `<span class="mat">${ic('coin')} ~${formatNum(rw.gold)}</span>` : '',
+    rw.xp ? `<span class="mat">${ic('spark')} ${formatNum(rw.xp)} xp</span>` : '',
+    rw.shards ? `<span class="mat">${ic('crystal')} ~${rw.shards}</span>` : '',
+    rw.scroll ? `<span class="mat">${ic('scroll')} ${rw.scroll}</span>` : '',
+    rw.warSeal ? `<span class="mat">${ic('medal')} ${rw.warSeal}</span>` : '',
     ...Object.entries(rw.mats || {}).map(([k, v]) => `<span class="mat">${k} ×${v}</span>`),
   ].join('');
   right.appendChild(rwEl);
@@ -314,7 +315,7 @@ function buildBriefing(body, foot, node, reg, ui) {
 
   /* ------------------------------------------------------------- footer */
   const canFight = State.deckValid();
-  foot.innerHTML = `<div class="growr sub">${canFight ? '' : `Your army needs ${CFG.battle.deckSize} cards before you can march.`}</div>`;
+  foot.innerHTML = `<div class="growr sub">${canFight ? '' : `Your army needs at least ${CFG.army.minDeck} cards before you can march. Open Army and fill the empty slots.`}</div>`;
   foot.appendChild(button('Back', 'ghost', () => UI.close()));
   const go = button('March', 'gold lg' + (canFight ? '' : ' dis'), () => {
     if (!canFight) { audio.play('ui.deny'); return; }
@@ -358,8 +359,8 @@ function armourAdvice(node, level) {
       <b>Their armour:</b> ${Object.entries(counts).map(([k, v]) => `${k} ×${v}`).join(' · ')}
     </div>
     <div class="advice mt10">
-      <b style="color:#8fe09a">Bring:</b> ${best.map(b => `<span class="t-${b.dt}">${b.dt}</span> (×${b.v.toFixed(2)})${mine.has(b.dt) ? ' ✓' : ''}`).join(', ')}<br>
-      <b style="color:#f0938a">Avoid relying on:</b> ${worst.map(b => `<span class="t-${b.dt}">${b.dt}</span> (×${b.v.toFixed(2)})${mine.has(b.dt) ? ' ⚠ in your deck' : ''}`).join(', ')}
+      <b style="color:#8fe09a">Bring:</b> ${best.map(b => `<span class="t-${b.dt}">${b.dt}</span> (×${b.v.toFixed(2)})${mine.has(b.dt) ? ' ' + ic('check') : ''}`).join(', ')}<br>
+      <b style="color:#f0938a">Avoid relying on:</b> ${worst.map(b => `<span class="t-${b.dt}">${b.dt}</span> (×${b.v.toFixed(2)})${mine.has(b.dt) ? ' ' + ic('quest') + ' in your deck' : ''}`).join(', ')}
     </div>`;
   return el;
 }
@@ -382,11 +383,11 @@ const FIELD_ADVICE = {
 
 function firstClearText(f) {
   const bits = [];
-  if (f.gold) bits.push(`🪙 ${formatNum(f.gold)}`);
-  if (f.cards) bits.push(...f.cards.map(c => `🃏 ${UNITS[c]?.name || c}`));
+  if (f.gold) bits.push(`${ic('coin')} ${formatNum(f.gold)}`);
+  if (f.cards) bits.push(...f.cards.map(c => `${ic('cards')} ${UNITS[c]?.name || c}`));
   if (f.mats) bits.push(...Object.entries(f.mats).map(([k, v]) => `${k} ×${v}`));
-  if (f.scroll) bits.push(`📜 ${f.scroll}`);
-  if (f.unlocks) bits.push(`🗺 unlocks ${REGIONS[f.unlocks]?.name}`);
+  if (f.scroll) bits.push(`${ic('scroll')} ${f.scroll}`);
+  if (f.unlocks) bits.push(`${ic('map')} unlocks ${REGIONS[f.unlocks]?.name}`);
   return bits.join(' · ');
 }
 
@@ -402,7 +403,7 @@ export function openEvent(node, ui) {
   const screen = {
     id: 'event',
     build(el, args, u) {
-      const parts = u.scaffold(el, { icon: node.icon || '🧭', title: ev.title, blurb: esc(node.intro || '') });
+      const parts = u.scaffold(el, { icon: node.icon || ic('compass'), title: ev.title, blurb: esc(node.intro || '') });
       const card = document.createElement('div');
       card.className = 'eventcard';
       parts.body.appendChild(card);
@@ -450,11 +451,11 @@ function showOutcome(card, res, ev) {
     d.innerHTML = `<div class="ri">${icon}</div><div class="rv">${val}</div><div class="rl">${label}</div>`;
     ro.appendChild(d);
   };
-  if (res.gained.gold) add('🪙', formatNum(res.gained.gold), 'Gold');
-  if (res.gained.xp) add('✦', formatNum(res.gained.xp), 'Experience');
-  if (res.gained.scroll) add('📜', res.gained.scroll, 'Scrolls');
-  if (res.gained.shards) add('🔷', res.gained.shards, 'Shards');
-  for (const k in res.gained.mats) add('📦', res.gained.mats[k], k);
+  if (res.gained.gold) add(ic('coin'), formatNum(res.gained.gold), 'Gold');
+  if (res.gained.xp) add(ic('spark'), formatNum(res.gained.xp), 'Experience');
+  if (res.gained.scroll) add(ic('scroll'), res.gained.scroll, 'Scrolls');
+  if (res.gained.shards) add(ic('crystal'), res.gained.shards, 'Shards');
+  for (const k in res.gained.mats) add(ic('crate'), res.gained.mats[k], k);
   if (!ro.children.length) add('—', '', 'Nothing gained');
   box.querySelector('#done').onclick = () => { UI.close(); UI.refresh?.(); };
 }
@@ -478,13 +479,13 @@ function openCache(node, reg, ui) {
   const mult = State.bonuses.materialMult;
   UI.confirm(node.name, esc(node.intro || 'A cache.') + '<br><br>' +
     Object.entries(rewards.mats || {}).map(([k, v]) => `${k} ×${Math.round(v * mult)}`).join(' · ') +
-    (rewards.gold ? ` · 🪙 ${rewards.gold}` : ''),
+    (rewards.gold ? ` · ${ic('coin')} ${rewards.gold}` : ''),
     () => {
       State.addGold(rewards.gold || 0, 'cache');
       for (const k in (rewards.mats || {})) State.addResource(k, Math.round(rewards.mats[k] * mult), 'cache');
       State.clearNode(node.id, { nodeId: node.id });
       audio.play('coin');
-      UI.toast('Cache emptied', 'good', '📦');
+      UI.toast('Cache emptied', 'good', ic('crate'));
       ui.refresh();
     }, 'Take it');
 }

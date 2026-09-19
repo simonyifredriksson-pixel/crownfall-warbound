@@ -1,3 +1,4 @@
+import { ic } from '../art/Icons.js';
 /* Dialogue.js — NPC voices and exploration events.
 
    Dialogue nodes are a small tree:
@@ -16,7 +17,7 @@
 export const NPCS = {
 
   wizard: {
-    id: 'wizard', name: 'Vaelthorn', title: 'Keeper of the Library', icon: '🧙',
+    id: 'wizard', name: 'Vaelthorn', title: 'Keeper of the Library', icon: ic('mage'),
     color: '#9a6fe0',
     portrait: { robe: 0x3b3f7a, trim: 0x9a6fe0, beard: 0xd8d0bc, glow: 0x9a6fe0 },
     zone: 'library',
@@ -24,7 +25,7 @@ export const NPCS = {
   },
 
   smith: {
-    id: 'smith', name: 'Dunnick Ore', title: 'Master of the Forge', icon: '🔨',
+    id: 'smith', name: 'Dunnick Ore', title: 'Master of the Forge', icon: ic('hammer'),
     color: '#e8823a',
     portrait: { apron: 0x5a3a2a, skin: 0xa07040, glow: 0xe8823a },
     zone: 'forge',
@@ -32,7 +33,7 @@ export const NPCS = {
   },
 
   quartermaster: {
-    id: 'quartermaster', name: 'Serjeant Bell', title: 'Quartermaster', icon: '📯',
+    id: 'quartermaster', name: 'Serjeant Bell', title: 'Quartermaster', icon: ic('horn'),
     color: '#d9a441',
     portrait: { coat: 0x2f5f8f, trim: 0xd9a441, glow: 0xd9a441 },
     zone: 'camp',
@@ -40,7 +41,7 @@ export const NPCS = {
   },
 
   merchant: {
-    id: 'merchant', name: 'Odessa Vane', title: 'Trader', icon: '💰',
+    id: 'merchant', name: 'Odessa Vane', title: 'Trader', icon: ic('purse'),
     color: '#5fa25a',
     portrait: { coat: 0x5a3a4a, trim: 0x8fbf4a, glow: 0x8fbf4a },
     zone: 'market',
@@ -48,11 +49,19 @@ export const NPCS = {
   },
 
   drillmaster: {
-    id: 'drillmaster', name: 'Captain Roon', title: 'Drillmaster', icon: '🎖',
+    id: 'drillmaster', name: 'Captain Roon', title: 'Drillmaster', icon: ic('medal'),
     color: '#c5362b',
     portrait: { coat: 0x4a4a52, trim: 0xc5362b, glow: 0xc5362b },
     zone: 'training',
     bio: 'Trains the recruits and has strong opinions about your deck. Will tell you them whether or not you ask.',
+  },
+
+  marshal: {
+    id: 'marshal', name: 'Marshal Corr', title: 'Your Second', icon: ic('scales'),
+    color: '#cbbb99',
+    portrait: { coat: 0x4a4438, trim: 0xcbbb99, glow: 0xd9a441 },
+    zone: 'keep',
+    bio: 'Aveline Corr held the Greenmarch line for eleven days with two hundred people and no orders. She is the reason there is still a keep to stand in. She teaches by stating the obvious exactly once and then expecting you to have heard it.',
   },
 };
 
@@ -253,6 +262,62 @@ export const DRILL_TREE = {
   },
   pos2: {
     text: 'Each one you hold gives you Command faster and pushes your deployment line eleven metres forward. Forward deployment is worth more than the Command, most days — it means your reinforcements arrive in the fight instead of walking to it.',
+    opts: [{ label: 'Back.', to: 'root' }],
+  },
+};
+
+/* --------------------------------------------------------------- MARSHAL
+   The Marshal is the game's teacher. Her tree is the permanent version of
+   the tutorial: anything the opening explained once, she will explain again,
+   on demand, forever. A player who skipped the tutorial or came back after a
+   month can get the whole game out of her in six clicks. */
+
+export const MARSHAL_TREE = {
+  root: {
+    text: 'Commander. The table is yours whenever you want it.',
+    opts: [
+      { label: 'Remind me what I am doing.', to: 'loop' },
+      { label: 'How do battles actually work?', to: 'battle' },
+      { label: 'What are cards, and how do I get more?', to: 'cards' },
+      { label: 'Who is who around here?', to: 'people' },
+      { label: 'Open the war map.', to: null, action: 'map' },
+      { label: 'Nothing right now.', to: null },
+    ],
+  },
+  loop: {
+    text: 'Win a battle. It pays gold, experience and shards.\n\n<span class="em">Shards</span> go to the Wizard and make a card stronger. <span class="em">Gold and materials</span> go to the smith and make YOU stronger. A stronger army opens harder ground, and harder ground pays better.\n\nThat is the entire war. Everything else is detail.',
+    opts: [
+      { label: 'Where do new cards come from?', to: 'cards' },
+      { label: 'Back.', to: 'root' },
+    ],
+  },
+  battle: {
+    text: 'You are on the field yourself — you are not watching from a cloud.\n\n<span class="em">Command</span> fills up on its own. Spend it to put cards down inside your deploy zone. Hold the <span class="em">control points</span> and it fills faster and your deploy line moves forward.\n\nKill their banner, or have more banner left than they do when time runs out.',
+    opts: [
+      { label: 'What about me personally?', to: 'you' },
+      { label: 'Back.', to: 'root' },
+    ],
+  },
+  you: {
+    text: 'WASD moves you, Space dodges, Q E R are whatever your gear grants you. Your armour decides what kind of commander you are: plate stands in the line, leather goes round the flank, robes stay behind the Giant and burn things.\n\nYou can die. You come back at the banner, and it costs you a Command. Try not to make a habit of it.',
+    opts: [{ label: 'Back.', to: 'root' }],
+  },
+  cards: {
+    text: 'Cards come from <span class="em">first clears</span> — the first time you take a piece of ground it hands you something new — from <span class="em">chests</span> in the market, and from shards piling up until they become a card on their own.\n\nYou started with three slots. Every couple of victories earns you another, up to eight. Do not rush it; three cards you understand beat eight you do not.',
+    opts: [
+      { label: 'How do I make one stronger?', to: 'upgrade' },
+      { label: 'Back.', to: 'root' },
+    ],
+  },
+  upgrade: {
+    text: 'Shards and gold, at the Wizard\'s Card Study. Every level is more health and more damage, and every third level the unit visibly changes — better trim, then pauldrons and a plume, then a cape and lit runes.\n\nThat is deliberate. You should be able to look at a line of knights and know which ones have been somewhere.',
+    opts: [
+      { label: 'Take me there.', to: null, action: 'library' },
+      { label: 'Back.', to: 'root' },
+    ],
+  },
+  people: {
+    text: '<span class="em">Vaelthorn</span> in the Library: card levels, research, potions, and the Codex if you want to know what you are fighting.\n\n<span class="em">Dunnick</span> at the Forge: your weapons and armour.\n\n<span class="em">Serjeant Bell</span> at the camp: the roster and the challenge board.\n\n<span class="em">Odessa</span> in the market: sells anything.\n\n<span class="em">Captain Roon</span> on the training ground: practice fights, and the counter table.',
     opts: [{ label: 'Back.', to: 'root' }],
   },
 };

@@ -12,6 +12,7 @@ import { makeRng, bagAdd, bagMerge } from '../core/Util.js';
 import { UNITS, COLLECTIBLE, unitsByRarity } from '../data/Units.js';
 import { MATERIALS, REGION_MATERIALS, TIER_WEIGHT } from '../data/Materials.js';
 import { RECIPES, isDiscovered } from '../data/Recipes.js';
+import { ic } from '../art/Icons.js';
 
 /**
  * Roll the reward bundle for a completed node.
@@ -133,7 +134,7 @@ function neededMaterial(state, pool, rng) {
 
 export const CHESTS = {
   supply: {
-    id: 'supply', name: 'Supply Crate', icon: '📦', color: '#9aa3af', price: 400,
+    id: 'supply', name: 'Supply Crate', icon: ic('crate'), color: '#9aa3af', price: 400,
     desc: 'Common materials and a handful of shards.',
     roll: (state, rng) => ({
       gold: rng.int(60, 160),
@@ -142,7 +143,7 @@ export const CHESTS = {
     }),
   },
   war: {
-    id: 'war', name: 'War Chest', icon: '⚔', color: '#4f8fd4', price: 1400,
+    id: 'war', name: 'War Chest', icon: ic('swords'), color: '#4f8fd4', price: 1400,
     desc: 'Tier-2 materials, a solid shard payout and a real chance of a new card.',
     roll: (state, rng) => ({
       gold: rng.int(200, 500),
@@ -152,7 +153,7 @@ export const CHESTS = {
     }),
   },
   relic: {
-    id: 'relic', name: 'Relic Vault', icon: '🏺', color: '#9a6fe0', price: 4200,
+    id: 'relic', name: 'Relic Vault', icon: ic('vase'), color: '#9a6fe0', price: 4200,
     desc: 'Rare materials, a large shard payout, and a guaranteed Epic-or-better card.',
     roll: (state, rng) => ({
       gold: rng.int(600, 1400),
@@ -163,7 +164,7 @@ export const CHESTS = {
     }),
   },
   crown: {
-    id: 'crown', name: 'Crown Reliquary', icon: '👑', color: '#e0a02e', price: 12000,
+    id: 'crown', name: 'Crown Reliquary', icon: ic('crown'), color: '#e0a02e', price: 12000,
     desc: 'Everything, including a Crown Shard. The Wizard disapproves of the whole arrangement.',
     roll: (state, rng) => ({
       gold: rng.int(1500, 3200),

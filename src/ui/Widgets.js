@@ -15,6 +15,7 @@ import { MATERIALS, getMaterial, resourceIcon, resourceName } from '../data/Mate
 import { ITEMS, SLOTS, SLOT_ORDER, itemStatsAt, WEAPON_CLASSES } from '../data/Items.js';
 import { esc, commas, formatNum, roman, clamp } from '../core/Util.js';
 import { paintPortrait, Thumbs, ROLE_GLYPH } from './Thumbs.js';
+import { ic } from '../art/Icons.js';
 
 /* ==========================================================================
    CARDS
@@ -197,8 +198,8 @@ export function cardDetail(unitId, opts = {}) {
     } else {
       const cost = State.upgradeCost(unitId);
       line.innerHTML = `<div class="costs">
-        <span class="ci${save.shards >= cost.shards ? '' : ' short'}">🔷 ${formatNum(save.shards)}/${formatNum(cost.shards)}</span>
-        <span class="ci${State.s.gold >= cost.gold ? '' : ' short'}">🪙 ${formatNum(cost.gold)}</span>
+        <span class="ci${save.shards >= cost.shards ? '' : ' short'}">${ic('crystal')} ${formatNum(save.shards)}/${formatNum(cost.shards)}</span>
+        <span class="ci${State.s.gold >= cost.gold ? '' : ' short'}">${ic('coin')} ${formatNum(cost.gold)}</span>
       </div>`;
       const btn = document.createElement('div');
       btn.className = 'btn gold' + (State.canUpgradeCard(unitId) ? '' : ' dis');

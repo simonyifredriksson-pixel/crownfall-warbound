@@ -14,6 +14,7 @@ import { REGIONS } from '../data/Campaign.js';
 import { CFG } from '../core/Config.js';
 import { audio } from '../core/Audio.js';
 import { esc, commas, formatNum, formatTime, clamp } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 export const ScreenResults = {
   id: 'results',
@@ -21,7 +22,7 @@ export const ScreenResults = {
   build(el, args, ui) {
     const { summary, result } = args;
     const parts = ui.scaffold(el, {
-      icon: result.victory ? '👑' : '💀',
+      icon: result.victory ? ic('crown') : ic('skull'),
       title: result.victory ? 'Victory' : 'Defeat',
       blurb: summary.node ? esc(summary.node.name) : 'The Endless War',
       foot: true,
@@ -49,13 +50,13 @@ function build(body, foot, summary, result, ui) {
   wrap.appendChild(row);
 
   const items = [];
-  if (rw.gold) items.push(['🪙', formatNum(rw.gold), 'Gold']);
-  if (rw.xp) items.push(['✦', formatNum(rw.xp), 'Experience']);
-  if (rw.scroll) items.push(['📜', rw.scroll, 'Scrolls']);
-  if (rw.warSeal) items.push(['🎖', rw.warSeal, 'War Seals']);
+  if (rw.gold) items.push([ic('coin'), formatNum(rw.gold), 'Gold']);
+  if (rw.xp) items.push([ic('spark'), formatNum(rw.xp), 'Experience']);
+  if (rw.scroll) items.push([ic('scroll'), rw.scroll, 'Scrolls']);
+  if (rw.warSeal) items.push([ic('medal'), rw.warSeal, 'War Seals']);
   for (const k in (rw.mats || {})) items.push([resourceIcon(k), rw.mats[k], resourceName(k)]);
-  for (const k in (rw.shards || {})) items.push(['🔷', rw.shards[k], (UNITS[k]?.name || k) + ' shards']);
-  for (const k in (rw.potions || {})) items.push(['🧪', rw.potions[k], 'Potions']);
+  for (const k in (rw.shards || {})) items.push([ic('crystal'), rw.shards[k], (UNITS[k]?.name || k) + ' shards']);
+  for (const k in (rw.potions || {})) items.push([ic('flask'), rw.potions[k], 'Potions']);
 
   if (!items.length) items.push(['—', '', 'No spoils']);
 
@@ -72,7 +73,7 @@ function build(body, foot, summary, result, ui) {
   if (summary.firstBundle) {
     const fc = document.createElement('div');
     fc.className = 'lvlup';
-    fc.innerHTML = `<div style="font-size:28px">🏆</div>
+    fc.innerHTML = `<div style="font-size:28px">${ic('medal')}</div>
       <div><div class="big">First Clear</div>
       <div class="sub" style="font-style:normal">${firstText(summary.firstBundle)}</div></div>`;
     wrap.appendChild(fc);
@@ -119,7 +120,7 @@ function build(body, foot, summary, result, ui) {
   if (summary.levelAfter > summary.levelBefore) {
     const lu = document.createElement('div');
     lu.className = 'lvlup';
-    lu.innerHTML = `<div style="font-size:28px">🎖</div>
+    lu.innerHTML = `<div style="font-size:28px">${ic('medal')}</div>
       <div><div class="big">Level ${summary.levelAfter}</div>
       <div class="sub" style="font-style:normal">+${(summary.levelAfter - summary.levelBefore) * CFG.cmd.hpPerLevel} health, and your gear scales with you.</div></div>`;
     wrap.appendChild(lu);
@@ -196,10 +197,10 @@ function verdictLine(result, summary) {
 
 function firstText(f) {
   const bits = [];
-  if (f.gold) bits.push(`🪙 ${formatNum(f.gold)}`);
-  if (f.cards) bits.push(...f.cards.map(c => `🃏 ${UNITS[c]?.name || c}`));
+  if (f.gold) bits.push(`${ic('coin')} ${formatNum(f.gold)}`);
+  if (f.cards) bits.push(...f.cards.map(c => `${ic('cards')} ${UNITS[c]?.name || c}`));
   if (f.mats) bits.push(...Object.entries(f.mats).map(([k, v]) => `${resourceIcon(k)} ${resourceName(k)} ×${v}`));
-  if (f.scroll) bits.push(`📜 ${f.scroll}`);
+  if (f.scroll) bits.push(`${ic('scroll')} ${f.scroll}`);
   return bits.join(' · ');
 }
 

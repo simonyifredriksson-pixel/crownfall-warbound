@@ -15,13 +15,14 @@ import { POTIONS } from '../data/Items.js';
 import { RARITY } from '../core/Config.js';
 import { audio } from '../core/Audio.js';
 import { esc, formatNum, commas } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 export const ScreenShop = {
   id: 'shop',
 
   build(el, args, ui) {
     const parts = ui.scaffold(el, {
-      icon: '💰',
+      icon: ic('purse'),
       title: 'The Marketplace',
       blurb: 'Odessa Vane. Everything here is legally hers as of about an hour ago.',
     });
@@ -49,7 +50,7 @@ function build(body, ui) {
     const sold = bought[key];
     const el = document.createElement('div');
     el.className = 'recipe' + (sold ? ' undisc' : '');
-    let icon = '📦', name = '', desc = '', rc = '#3d4453';
+    let icon = ic('crate'), name = '', desc = '', rc = '#3d4453';
 
     if (s.kind === 'chest') {
       const c = CHESTS[s.id];
@@ -59,7 +60,7 @@ function build(body, ui) {
       icon = m.icon; name = `${m.name} ×${s.qty}`; desc = m.desc; rc = m.color;
     } else if (s.kind === 'shards') {
       const u = UNITS[s.id];
-      icon = '🔷'; name = `${u.name} shards ×${s.qty}`;
+      icon = ic('crystal'); name = `${u.name} shards ×${s.qty}`;
       desc = `Upgrade material for ${u.name}. You hold ${formatNum(State.card(s.id)?.shards || 0)}.`;
       rc = RARITY[u.rarity].color;
     } else if (s.kind === 'potion') {
@@ -73,7 +74,7 @@ function build(body, ui) {
       <div>
         <div class="rn">${esc(name)}</div>
         <div class="rd">${esc(desc)}</div>
-        <div class="matlist"><span class="mat${State.s.gold >= s.price ? '' : ' short'}">🪙 ${formatNum(s.price)}</span></div>
+        <div class="matlist"><span class="mat${State.s.gold >= s.price ? '' : ' short'}">${ic('coin')} ${formatNum(s.price)}</span></div>
       </div>
       <div></div>`;
 
@@ -97,7 +98,7 @@ function build(body, ui) {
   const refreshCost = 250 + (State.s.flags.shopRefresh || 0) * 120;
   const foot = document.createElement('div');
   foot.className = 'rowflex mt16';
-  foot.appendChild(button(`Refresh stock — 🪙 ${formatNum(refreshCost)}`, 'ghost' + (State.s.gold >= refreshCost ? '' : ' dis'), () => {
+  foot.appendChild(button(`Refresh stock — ${ic('coin')} ${formatNum(refreshCost)}`, 'ghost' + (State.s.gold >= refreshCost ? '' : ' dis'), () => {
     if (State.s.gold < refreshCost) { audio.play('ui.deny'); return; }
     State.addGold(-refreshCost, 'shop');
     State.s.flags.shopRefresh = (State.s.flags.shopRefresh || 0) + 1;
@@ -123,7 +124,7 @@ function buy(s, ui) {
   } else if (s.kind === 'shards') {
     State.addShards(s.id, s.qty);
     audio.play('coin');
-    UI.toast(`${UNITS[s.id].name} shards ×${s.qty}`, 'good', '🔷');
+    UI.toast(`${UNITS[s.id].name} shards ×${s.qty}`, 'good', ic('crystal'));
   } else if (s.kind === 'potion') {
     State.addPotion(s.id, s.qty);
     audio.play('coin');
@@ -133,12 +134,12 @@ function buy(s, ui) {
 
 function showChest(chest, loot) {
   const items = [];
-  if (loot.gold) items.push(['🪙', formatNum(loot.gold), 'Gold']);
-  if (loot.warSeal) items.push(['🎖', loot.warSeal, 'War Seals']);
-  if (loot.scroll) items.push(['📜', loot.scroll, 'Scrolls']);
+  if (loot.gold) items.push([ic('coin'), formatNum(loot.gold), 'Gold']);
+  if (loot.warSeal) items.push([ic('medal'), loot.warSeal, 'War Seals']);
+  if (loot.scroll) items.push([ic('scroll'), loot.scroll, 'Scrolls']);
   for (const k in (loot.mats || {})) items.push([resourceIcon(k), loot.mats[k], resourceName(k)]);
-  for (const k in (loot.shards || {})) items.push(['🔷', loot.shards[k], (UNITS[k]?.name || k) + ' shards']);
-  for (const c of (loot.cards || [])) items.push(['🃏', '', UNITS[c]?.name || c]);
+  for (const k in (loot.shards || {})) items.push([ic('crystal'), loot.shards[k], (UNITS[k]?.name || k) + ' shards']);
+  for (const c of (loot.cards || [])) items.push([ic('cards'), '', UNITS[c]?.name || c]);
 
   UI.overlay(`
     <div class="h-rule"><h2>${chest.icon} ${esc(chest.name)}</h2></div>

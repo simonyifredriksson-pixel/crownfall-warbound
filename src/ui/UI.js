@@ -13,6 +13,7 @@ import { CFG } from '../core/Config.js';
 import { commas, formatNum, esc, clamp } from '../core/Util.js';
 import { MATERIALS, CURRENCIES, getMaterial, resourceIcon, resourceName } from '../data/Materials.js';
 import { UNITS } from '../data/Units.js';
+import { ic } from '../art/Icons.js';
 
 class UISystem {
   constructor() {
@@ -32,11 +33,11 @@ class UISystem {
     bus.on(EV.RESOURCE_GAINED, ({ id }) => this._bump(id));
     bus.on(EV.STATE_CHANGED, () => this.refreshTopbar());
     bus.on(EV.LEVEL_UP, ({ level }) => {
-      this.toast(`Commander level ${level}`, 'legend', '🎖');
+      this.toast(`Commander level ${level}`, 'legend', ic('medal'));
       audio.play('levelup');
     });
     bus.on(EV.CARD_UNLOCKED, ({ unit }) => {
-      this.toast(`New card: ${unit.name}`, unit.rarity === 'legendary' || unit.rarity === 'mythic' ? 'legend' : 'epic', '🃏');
+      this.toast(`New card: ${unit.name}`, unit.rarity === 'legendary' || unit.rarity === 'mythic' ? 'legend' : 'epic', ic('cards'));
       audio.play('unlock');
     });
     bus.on(EV.QUEST_COMPLETE, ({ quest }) => {
@@ -62,9 +63,9 @@ class UISystem {
       <div class="spacer"></div>
       <div class="res-group" id="res-group"></div>
       <div class="res res-lvl" data-tip="commander">
-        <span class="ico">🎖</span><span class="val" id="res-level">1</span>
+        <span class="ico">${ic('medal')}</span><span class="val" id="res-level">1</span>
       </div>
-      <div class="btn ghost sm" data-act="options"><span>⚙</span></div>
+      <div class="btn ghost sm" data-act="options"><span>${ic('gear')}</span></div>
     `;
     this.root.appendChild(el);
     this.topbar = el;
@@ -86,9 +87,9 @@ class UISystem {
     if (!s) return;
     const g = this.topbar.querySelector('#res-group');
     const rows = [
-      { id: 'gold', icon: '🪙', v: s.gold },
-      { id: 'scroll', icon: '📜', v: s.scroll },
-      { id: 'warSeal', icon: '🎖', v: s.warSeal },
+      { id: 'gold', icon: ic('coin'), v: s.gold },
+      { id: 'scroll', icon: ic('scroll'), v: s.scroll },
+      { id: 'warSeal', icon: ic('medal'), v: s.warSeal },
     ];
     // top three materials by quantity, so the bar reflects what you actually have
     const mats = Object.entries(s.materials).sort((a, b) => b[1] - a[1]).slice(0, 3);

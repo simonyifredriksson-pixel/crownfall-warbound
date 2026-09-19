@@ -61,6 +61,8 @@ export function newProfile() {
 
     /* meta */
     quests: {},
+    // onboarding progress, so closing the tab mid-tutorial resumes in place
+    tutorial: { step: 0, done: false, said: [] },
     flags: { firstRun: true },
     stats: { battles: 0, wins: 0, losses: 0, kills: 0, deaths: 0, damage: 0, goldEarned: 0, playtime: 0 },
     settings: {
@@ -310,12 +312,35 @@ class GameState {
 
   /* --------------------------------------------------------------- deck */
 
+  /** How many campaign nodes have actually been beaten. */
+  clearedCount() {
+    let n = 0;
+    for (const k in this.s.progress.nodes) if (this.s.progress.nodes[k].cleared) n++;
+    return n;
+  }
+
+  /** How many cards you may field right now. Starts at 3 and grows. */
+  deckCapacity() {
+    const t = CFG.army.capacityByClears;
+    return t[Math.min(this.clearedCount(), t.length - 1)];
+  }
+
+  /** How many more battles until the next slot, or null at the cap. */
+  nextSlotIn() {
+    const at = CFG.army.nextSlotAt(this.clearedCount());
+    return at === null ? null : at - this.clearedCount();
+  }
+
   setDeck(ids) {
-    this.s.deck = ids.filter(id => this.s.cards[id]).slice(0, CFG.battle.deckSize);
+    this.s.deck = ids.filter(id => this.s.cards[id]).slice(0, this.deckCapacity());
     this.mark();
   }
 
-  deckValid() { return this.s.deck.length === CFG.battle.deckSize; }
+  /** A deck is marchable at three cards. It does not have to be full. */
+  deckValid() {
+    const n = this.s.deck.length;
+    return n >= CFG.army.minDeck && n <= this.deckCapacity();
+  }
 
   deckUnits() { return this.s.deck.map(id => UNITS[id]).filter(Boolean); }
 

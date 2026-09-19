@@ -35,7 +35,6 @@ export const CFG = {
     commandRegen: 1 / 2.35,  // per second, base
     commandPerPoint: 0.16,   // extra regen per owned control point
     handSize: 4,
-    deckSize: 8,
     deployMargin: 1.6,       // how far from the deploy line you may drop
     deployDelaySec: 0.85,    // spawn wind-up before a unit can act
     corpseLinger: 9,         // seconds a corpse stays (necromancy fodder)
@@ -100,6 +99,26 @@ export const CFG = {
     weightSpeedPenalty: 0.0032,  // move speed lost per point of gear weight
     xpPerLevel: lvl => Math.round(180 * Math.pow(1.34, lvl - 1)),
     maxLevel: 40,
+  },
+
+  /* -------------------------------------------------------------- army
+     The deck GROWS. A new commander fields three cards — Knight, Mage,
+     Giant — and earns a fourth slot by winning, a fifth by winning again,
+     and so on. Demanding eight cards from someone who has not yet been told
+     what a card is was the single most confusing thing in the game.
+
+     Indexed by campaign nodes cleared; the last entry is the cap. */
+  army: {
+    capacityByClears: [3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8],
+    minDeck: 3,
+    /** Which clear count first grants each slot — used by the UI to say
+        "win one more battle for a fourth slot". */
+    nextSlotAt(cleared) {
+      const t = CFG.army.capacityByClears;
+      const now = t[Math.min(cleared, t.length - 1)];
+      for (let i = cleared + 1; i < t.length; i++) if (t[i] > now) return i;
+      return null;
+    },
   },
 
   /* ------------------------------------------------------------- cards */

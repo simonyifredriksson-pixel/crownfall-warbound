@@ -1,3 +1,4 @@
+import { ic } from '../art/Icons.js';
 /* Campaign.js — the world map: five regions, forty-odd nodes.
 
    Node types
@@ -21,7 +22,7 @@ export const REGIONS = {
      Teaching region. Introduces deployment, counters, control points.
      ===================================================================== */
   greenmarch: {
-    id: 'greenmarch', name: 'The Greenmarch', order: 0, icon: '🌲',
+    id: 'greenmarch', name: 'The Greenmarch', order: 0, icon: ic('tree'),
     faction: 'goblin', color: '#5fa25a',
     tagline: 'Rolling farmland going slowly feral.',
     desc: 'Three days\' ride from the keep and already not yours. The warbands came down out of the hills in spring and nobody stopped them, because there was nobody to do it.',
@@ -30,13 +31,44 @@ export const REGIONS = {
     materials: ['iron', 'oak', 'leather', 'cloth', 'herb'],
     nodes: [
       {
+        /* The first battle in the game is a WAVE battle, not a skirmish.
+           The free-form enemy director is a genuine opponent and therefore
+           unteachable: nothing it does is repeatable and nothing can be
+           explained while it happens. Four scripted waves, each introducing
+           exactly one idea, and the fight ends when the last one is dead. */
         id: 'gm1', name: 'The Broken Fence', type: 'battle', x: 12, y: 74, requires: [],
         faction: 'goblin', level: 1, field: 'open',
         enemyDeck: ['goblinCutter', 'goblinCutter', 'goblinArcher'],
         intro: 'Six goblins and a hole in a fence. Everyone starts somewhere.',
         tutorial: 'deploy',
+        waveLeadIn: 6,
+        waves: [
+          {
+            name: 'A scout, alone', units: ['goblinCutter'], gap: 7,
+            teach: 'Press 1 to pick the Knight, then click the ground inside the blue zone.',
+            after: 'That is the whole loop. Command builds up, you spend it, the card fights.',
+          },
+          {
+            name: 'They brought a bow', units: ['goblinCutter', 'goblinArcher'], gap: 7,
+            teach: 'The archer stays at the back and shoots. Put the Mage behind the Knight and let the Knight walk into it.',
+            after: 'Whatever is closest to the enemy is what the enemy kills. Choose who that is.',
+          },
+          {
+            name: 'A proper rush', units: ['goblinCutter', 'goblinCutter', 'goblinCutter'], gap: 8,
+            teach: 'Three at once. Drop them in front of your line, not behind it — a unit that has to walk past your knight arrives alone.',
+            after: 'Numbers beat quality until quality is standing in a doorway.',
+          },
+          {
+            name: 'Something big', units: ['goblinShaman', 'goblinCutter', 'goblinCutter'], gap: 6,
+            teach: 'The shaman heals the others. Kill it first, or kill nothing.',
+          },
+        ],
         rewards: { gold: 90, xp: 60, mats: { iron: 3, oak: 2 }, shards: 6 },
-        first: { gold: 150, cards: ['militia'] },
+        /* The first clear must hand over ENOUGH SHARDS FOR AN ACTUAL UPGRADE.
+           The tutorial's next instruction is "go and level a card", and six
+           shards split three ways is two each — not enough for anything. An
+           onboarding step the player cannot complete is worse than no step. */
+        first: { gold: 150, cards: ['militia'], shards: { knight: 14, mage: 8, giant: 8 } },
       },
       {
         id: 'gm2', name: 'Millstone Ford', type: 'battle', x: 24, y: 62, requires: ['gm1'],
@@ -44,12 +76,33 @@ export const REGIONS = {
         enemyDeck: ['goblinCutter', 'goblinCutter', 'goblinArcher', 'goblinBomber'],
         intro: 'One crossing, and they are already on it. A narrow front suits whoever has fewer bodies — that is you.',
         tutorial: 'chokepoint',
+        waveLeadIn: 6,
+        waves: [
+          {
+            name: 'Testing the crossing', units: ['goblinCutter', 'goblinCutter'], gap: 7,
+            teach: 'One crossing. Put the Giant in it and nothing gets past him.',
+          },
+          {
+            name: 'Slingers on the far bank', units: ['goblinArcher', 'goblinArcher', 'goblinCutter'], gap: 7,
+            teach: 'Ranged units will not close. Your Mage outranges them — set her up behind the Giant.',
+            after: 'A chokepoint turns their numbers into a queue.',
+          },
+          {
+            name: 'A bomber', units: ['goblinBomber', 'goblinCutter', 'goblinCutter'], gap: 8,
+            teach: 'Bombs do splash. A tight cluster is a gift — spread out.',
+            after: 'Formation is a decision, not a default.',
+          },
+          {
+            name: 'Everything left', units: ['goblinCutter', 'goblinCutter', 'goblinArcher', 'goblinBomber'], gap: 6,
+            teach: 'All of it at once. Hold the ford.',
+          },
+        ],
         rewards: { gold: 110, xp: 75, mats: { iron: 3, oak: 3 }, shards: 8 },
         first: { gold: 180, cards: ['archer'] },
       },
       {
         id: 'gm3', name: 'The Old Orchard', type: 'explore', x: 16, y: 48, requires: ['gm1'],
-        icon: '🍎',
+        icon: ic('apple'),
         intro: 'Apple trees gone wild, and something moving in the rows.',
         event: 'orchard',
       },
@@ -81,13 +134,13 @@ export const REGIONS = {
       },
       {
         id: 'gm7', name: 'Ashfield Cache', type: 'cache', x: 42, y: 26, requires: ['gm5'],
-        icon: '📦', repeatable: true,
+        icon: ic('crate'), repeatable: true,
         intro: 'A supply wagon the warband never got round to emptying.',
         rewards: { gold: 80, mats: { iron: 5, oak: 5, leather: 4, cloth: 3 } },
       },
       {
         id: 'gm8', name: 'The Standing Stones', type: 'camp', x: 58, y: 30, requires: ['gm6'],
-        icon: '🔥',
+        icon: ic('flame'),
         intro: 'Somewhere to put your back against for a night.',
         event: 'camp1',
       },
@@ -108,7 +161,7 @@ export const REGIONS = {
      Teaches: protecting your backline, reveal, chokepoint discipline.
      ===================================================================== */
   blackbriar: {
-    id: 'blackbriar', name: 'Blackbriar Fen', order: 1, icon: '🌾',
+    id: 'blackbriar', name: 'Blackbriar Fen', order: 1, icon: ic('wheat'),
     faction: 'bandit', color: '#8a6a3a',
     tagline: 'Wet ground, bad footing, worse people.',
     desc: 'The Coalition took the fen because nobody else wanted it, and then discovered that everything worth taking has to pass through it. Mara Blackhand charges a toll and calls it governance.',
@@ -135,7 +188,7 @@ export const REGIONS = {
       },
       {
         id: 'bb3', name: 'The Drowned Chapel', type: 'explore', x: 14, y: 44, requires: ['bb1'],
-        icon: '⛪', intro: 'Half a chapel, standing in three feet of water.', event: 'chapel',
+        icon: ic('chapel'), intro: 'Half a chapel, standing in three feet of water.', event: 'chapel',
       },
       {
         id: 'bb4', name: 'Poacher\'s Hollow', type: 'battle', x: 36, y: 46, requires: ['bb2'],
@@ -166,13 +219,13 @@ export const REGIONS = {
       },
       {
         id: 'bb7', name: 'Smuggler\'s Cache', type: 'cache', x: 42, y: 18, requires: ['bb5'],
-        icon: '📦', repeatable: true,
+        icon: ic('crate'), repeatable: true,
         intro: 'Six crates under a rotten jetty. Two of them are worth carrying.',
         rewards: { gold: 140, mats: { steel: 3, leather: 6, cloth: 5, arcaneDust: 2 } },
       },
       {
         id: 'bb8', name: 'Fenwatch Ruin', type: 'camp', x: 58, y: 22, requires: ['bb6'],
-        icon: '🔥', intro: 'A watchtower with three walls left.', event: 'camp2',
+        icon: ic('flame'), intro: 'A watchtower with three walls left.', event: 'camp2',
       },
       {
         id: 'bb9', name: 'Blackhand\'s Table', type: 'boss', x: 74, y: 30, requires: ['bb6', 'bb8'],
@@ -191,7 +244,7 @@ export const REGIONS = {
      Teaches: heavy armour counters, control, blunt damage.
      ===================================================================== */
   ashenwaste: {
-    id: 'ashenwaste', name: 'The Ashen Waste', order: 2, icon: '🌋',
+    id: 'ashenwaste', name: 'The Ashen Waste', order: 2, icon: ic('volcano'),
     faction: 'orc', color: '#c25a2a',
     tagline: 'Black glass and old fire.',
     desc: 'Something burned here long enough that the sand turned to glass. The horde moved in because nothing else would, and Gharuk has been walking west ever since.',
@@ -218,7 +271,7 @@ export const REGIONS = {
       },
       {
         id: 'aw3', name: 'The Slag Pits', type: 'explore', x: 16, y: 40, requires: ['aw1'],
-        icon: '⛏', intro: 'Emberglass, if you are willing to go down for it.', event: 'slagpits',
+        icon: ic('pick'), intro: 'Emberglass, if you are willing to go down for it.', event: 'slagpits',
       },
       {
         id: 'aw4', name: 'Boarpen Ridge', type: 'battle', x: 36, y: 42, requires: ['aw2'],
@@ -249,13 +302,13 @@ export const REGIONS = {
       },
       {
         id: 'aw7', name: 'Firewind Cache', type: 'cache', x: 42, y: 14, requires: ['aw5'],
-        icon: '📦', repeatable: true,
+        icon: ic('crate'), repeatable: true,
         intro: 'A caravan that did not make it out.',
         rewards: { gold: 220, mats: { emberglass: 5, steel: 5, iron: 8, dragonbone: 1 } },
       },
       {
         id: 'aw8', name: 'The Last Well', type: 'camp', x: 60, y: 18, requires: ['aw6'],
-        icon: '🔥', intro: 'Clean water in the Waste. People have died for less.', event: 'camp3',
+        icon: ic('flame'), intro: 'Clean water in the Waste. People have died for less.', event: 'camp3',
       },
       {
         id: 'aw9', name: 'Gharuk\'s Warcamp', type: 'boss', x: 76, y: 28, requires: ['aw6', 'aw8'],
@@ -274,7 +327,7 @@ export const REGIONS = {
      Teaches: damage-type specialisation, denial, attrition management.
      ===================================================================== */
   hollowmere: {
-    id: 'hollowmere', name: 'Hollowmere', order: 3, icon: '💀',
+    id: 'hollowmere', name: 'Hollowmere', order: 3, icon: ic('skull'),
     faction: 'undead', color: '#79cfe0',
     tagline: 'A lake that does not freeze and a town that does not empty.',
     desc: 'Morvant was the Crown\'s own archivist. He is still, technically, employed. He has simply reinterpreted the post, and the population of Hollowmere with it.',
@@ -301,7 +354,7 @@ export const REGIONS = {
       },
       {
         id: 'hm3', name: 'The Archivist\'s House', type: 'explore', x: 15, y: 42, requires: ['hm1'],
-        icon: '📚', intro: 'Morvant\'s old study. The Wizard would very much like to know what is in it.', event: 'archivist',
+        icon: ic('codex'), intro: 'Morvant\'s old study. The Wizard would very much like to know what is in it.', event: 'archivist',
       },
       {
         id: 'hm4', name: 'Bonefield', type: 'battle', x: 36, y: 44, requires: ['hm2'],
@@ -332,13 +385,13 @@ export const REGIONS = {
       },
       {
         id: 'hm7', name: 'Reliquary Vault', type: 'cache', x: 42, y: 16, requires: ['hm5'],
-        icon: '📦', repeatable: true,
+        icon: ic('crate'), repeatable: true,
         intro: 'Grave goods. Nobody is using them.',
         rewards: { gold: 320, mats: { silver: 4, boneMeal: 8, arcaneDust: 6, cloth: 6 } },
       },
       {
         id: 'hm8', name: 'The Lantern Row', type: 'camp', x: 60, y: 20, requires: ['hm6'],
-        icon: '🔥', intro: 'Someone still lights these. Nobody will say who.', event: 'camp4',
+        icon: ic('flame'), intro: 'Someone still lights these. Nobody will say who.', event: 'camp4',
       },
       {
         id: 'hm9', name: 'The Undying Court', type: 'boss', x: 78, y: 30, requires: ['hm6', 'hm8'],
@@ -357,7 +410,7 @@ export const REGIONS = {
      Endgame. Teaches: mixed damage, ward rotation, pylon priority.
      ===================================================================== */
   stormspire: {
-    id: 'stormspire', name: 'The Stormspire', order: 4, icon: '⚡',
+    id: 'stormspire', name: 'The Stormspire', order: 4, icon: ic('stamina'),
     faction: 'conclave', color: '#b07fd0',
     tagline: 'A mountain with a hole in the sky above it.',
     desc: 'The Conclave took the Spire for the view and stayed for what they found underneath it. The Ancient Guardians were already there, and are not interested in either side.',
@@ -386,7 +439,7 @@ export const REGIONS = {
       },
       {
         id: 'ss3', name: 'The Hollow Below', type: 'explore', x: 15, y: 46, requires: ['ss1'],
-        icon: '🕳', intro: 'The Guardians came from down there. So did the Void Embers.', event: 'hollow',
+        icon: ic('pit'), intro: 'The Guardians came from down there. So did the Void Embers.', event: 'hollow',
       },
       {
         id: 'ss4', name: 'Pylon Field', type: 'battle', x: 36, y: 46, requires: ['ss2'],
@@ -416,13 +469,13 @@ export const REGIONS = {
       },
       {
         id: 'ss7', name: 'Starfall Cache', type: 'cache', x: 44, y: 16, requires: ['ss5'],
-        icon: '📦', repeatable: true,
+        icon: ic('crate'), repeatable: true,
         intro: 'Star iron, if you can get to it before the Seekers do.',
         rewards: { gold: 500, mats: { starIron: 2, runestone: 4, voidEmber: 3, frostLotus: 4 } },
       },
       {
         id: 'ss8', name: 'The Last Camp', type: 'camp', x: 64, y: 22, requires: ['ss6'],
-        icon: '🔥', intro: 'The Wizard has come out of the Library for this one.', event: 'camp5',
+        icon: ic('flame'), intro: 'The Wizard has come out of the Library for this one.', event: 'camp5',
       },
       {
         id: 'ss9', name: 'The Warden\'s Gate', type: 'boss', x: 82, y: 34, requires: ['ss6', 'ss8'],
@@ -435,7 +488,7 @@ export const REGIONS = {
       },
       {
         id: 'ss10', name: 'The Endless War', type: 'endless', x: 88, y: 60, requires: ['ss9'],
-        icon: '♾', faction: 'ancient', level: 36, field: 'spire',
+        icon: ic('infinity'), faction: 'ancient', level: 36, field: 'spire',
         intro: 'The war does not finish. It only changes management. Fight waves of escalating armies for as long as you can hold.',
         desc: 'Endless mode: each wave mixes factions and raises levels. Rewards scale with the wave you reach.',
       },
@@ -461,16 +514,16 @@ export function findNode(nodeId) {
 
 /** Battlefield modifiers a node can carry. Explained in the briefing screen. */
 export const MODIFIERS = {
-  swarm:       { name: 'Endless Ranks', icon: '🐜', desc: 'The enemy deploys in larger groups and regenerates Command 25% faster.' },
-  cover:       { name: 'Heavy Cover', icon: '🌳', desc: 'Ranged attacks into the treeline do 25% less damage. Both sides.' },
-  thief:       { name: 'Cutpurse', icon: '💰', desc: 'The enemy steals 2 Command from you every 17 seconds until the thief is dead.' },
-  fireGround:  { name: 'Burning Ground', icon: '🔥', desc: 'Patches of the field are alight. Anything that stands in one burns.' },
-  poisonGround:{ name: 'Miasma', icon: '🟢', desc: 'Low ground is poisonous. Flyers are unaffected.' },
-  enraged:     { name: 'Bloodfury', icon: '💢', desc: 'Every enemy enrages below half health: +60% attack speed.' },
-  corpseRise:  { name: 'The Dead Rise', icon: '💀', desc: 'Corpses on the field are raised as Risen by the enemy every 8s. Fire destroys corpses.' },
-  silenceAura: { name: 'Sealed Air', icon: '🤐', desc: 'Your units within 10m of an enemy Silencer cannot use abilities.' },
-  nightfall:   { name: 'Nightfall', icon: '🌙', desc: 'Sight range halved for both sides. Assassins and scouts become far more valuable.' },
-  highWind:    { name: 'High Wind', icon: '💨', desc: 'Ranged attacks lose 3m of range. Flyers move 20% faster.' },
+  swarm:       { name: 'Endless Ranks', icon: ic('swarm'), desc: 'The enemy deploys in larger groups and regenerates Command 25% faster.' },
+  cover:       { name: 'Heavy Cover', icon: ic('forest'), desc: 'Ranged attacks into the treeline do 25% less damage. Both sides.' },
+  thief:       { name: 'Cutpurse', icon: ic('purse'), desc: 'The enemy steals 2 Command from you every 17 seconds until the thief is dead.' },
+  fireGround:  { name: 'Burning Ground', icon: ic('flame'), desc: 'Patches of the field are alight. Anything that stands in one burns.' },
+  poisonGround:{ name: 'Miasma', icon: ic('poison'), desc: 'Low ground is poisonous. Flyers are unaffected.' },
+  enraged:     { name: 'Bloodfury', icon: ic('rage'), desc: 'Every enemy enrages below half health: +60% attack speed.' },
+  corpseRise:  { name: 'The Dead Rise', icon: ic('skull'), desc: 'Corpses on the field are raised as Risen by the enemy every 8s. Fire destroys corpses.' },
+  silenceAura: { name: 'Sealed Air', icon: ic('silence'), desc: 'Your units within 10m of an enemy Silencer cannot use abilities.' },
+  nightfall:   { name: 'Nightfall', icon: ic('moon'), desc: 'Sight range halved for both sides. Assassins and scouts become far more valuable.' },
+  highWind:    { name: 'High Wind', icon: ic('wind'), desc: 'Ranged attacks lose 3m of range. Flyers move 20% faster.' },
 };
 
 /** Endless-mode wave generator — mixes factions and scales. */

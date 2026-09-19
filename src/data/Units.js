@@ -1,3 +1,4 @@
+import { ic } from '../art/Icons.js';
 /* Units.js — the card roster and every fielded creature in the game.
 
    One table drives everything: the collection UI, the battle sim, the enemy
@@ -41,17 +42,17 @@
 */
 
 export const ROLE_INFO = {
-  guardian: { name: 'Guardian', icon: '🛡', blurb: 'Holds ground and shields what stands behind it.' },
-  melee:    { name: 'Melee',    icon: '⚔', blurb: 'Closes the distance and fights in the press.' },
-  ranged:   { name: 'Ranged',   icon: '🏹', blurb: 'Kills from a distance; dies fast if reached.' },
-  caster:   { name: 'Caster',   icon: '✨', blurb: 'Abilities are the weapon. Protect it.' },
-  support:  { name: 'Support',  icon: '💚', blurb: 'Keeps the line alive. Kill it first.' },
-  assassin: { name: 'Assassin', icon: '🗡', blurb: 'Goes around the wall, not through it.' },
-  siege:    { name: 'Siege',    icon: '🪨', blurb: 'Breaks structures. Helpless alone.' },
-  summoner: { name: 'Summoner', icon: '⚰', blurb: 'Turns time into bodies.' },
-  beast:    { name: 'Beast',    icon: '🐺', blurb: 'Fast, savage, better in numbers.' },
-  flyer:    { name: 'Flyer',    icon: '🪽', blurb: 'Ignores the ground war entirely.' },
-  cavalry:  { name: 'Cavalry',  icon: '🐎', blurb: 'Needs room to run. Devastating when it gets it.' },
+  guardian: { name: 'Guardian', icon: ic('shield'), blurb: 'Holds ground and shields what stands behind it.' },
+  melee:    { name: 'Melee',    icon: ic('swords'), blurb: 'Closes the distance and fights in the press.' },
+  ranged:   { name: 'Ranged',   icon: ic('bow'), blurb: 'Kills from a distance; dies fast if reached.' },
+  caster:   { name: 'Caster',   icon: ic('orb'), blurb: 'Abilities are the weapon. Protect it.' },
+  support:  { name: 'Support',  icon: ic('heal'), blurb: 'Keeps the line alive. Kill it first.' },
+  assassin: { name: 'Assassin', icon: ic('dagger'), blurb: 'Goes around the wall, not through it.' },
+  siege:    { name: 'Siege',    icon: ic('siege'), blurb: 'Breaks structures. Helpless alone.' },
+  summoner: { name: 'Summoner', icon: ic('coffin'), blurb: 'Turns time into bodies.' },
+  beast:    { name: 'Beast',    icon: ic('wolf'), blurb: 'Fast, savage, better in numbers.' },
+  flyer:    { name: 'Flyer',    icon: ic('wing'), blurb: 'Ignores the ground war entirely.' },
+  cavalry:  { name: 'Cavalry',  icon: ic('horse'), blurb: 'Needs room to run. Devastating when it gets it.' },
 };
 
 /* Shorthand so the table below stays readable. */

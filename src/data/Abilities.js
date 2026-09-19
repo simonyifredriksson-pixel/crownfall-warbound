@@ -45,6 +45,7 @@
 
 import { CFG } from '../core/Config.js';
 import { rng, clamp, TAU } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 /** Ability strength scales with the card's level exactly like its stats do. */
 const S = (self, base) => base * (self.statMult || 1) * (self.mods?.abilityMult || 1);
@@ -56,7 +57,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   shieldBrace: {
-    id: 'shieldBrace', name: 'Shield Brace', icon: '🛡', tier: 0, kind: 'active',
+    id: 'shieldBrace', name: 'Shield Brace', icon: ic('shield'), tier: 0, kind: 'active',
     cd: 9, dur: 3.2,
     desc: () => 'Plants the shield: takes 55% less damage and gains armour for 3.2s, but cannot advance. Allies directly behind are covered too.',
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 7).length >= 1 && self.hp < self.maxHp * 0.92,
@@ -73,7 +74,7 @@ export const ABILITIES = {
   },
 
   holdTheLine: {
-    id: 'holdTheLine', name: 'Hold the Line', icon: '🧱', tier: 2, kind: 'aura',
+    id: 'holdTheLine', name: 'Hold the Line', icon: ic('wall'), tier: 2, kind: 'aura',
     radius: 5.5,
     desc: () => 'Nearby allies gain +5 armour. The bonus doubles while this unit is braced.',
     aura(b, self) {
@@ -83,7 +84,7 @@ export const ABILITIES = {
   },
 
   vengefulGuard: {
-    id: 'vengefulGuard', name: 'Vengeful Guard', icon: '⚔', tier: 3, kind: 'onDamaged',
+    id: 'vengefulGuard', name: 'Vengeful Guard', icon: ic('swords'), tier: 3, kind: 'onDamaged',
     desc: () => 'Returns 22% of melee damage taken straight back at the attacker.',
     run(b, self, ctx) {
       if (!ctx.attacker || ctx.attacker.range > 4) return;
@@ -92,7 +93,7 @@ export const ABILITIES = {
   },
 
   lastStand: {
-    id: 'lastStand', name: 'Last Stand', icon: '💀', tier: 4, awaken: true, kind: 'passive',
+    id: 'lastStand', name: 'Last Stand', icon: ic('skull'), tier: 4, awaken: true, kind: 'passive',
     desc: () => 'The first killing blow instead leaves it at 1 health and grants 3s of Warded and Enraged. Once per battle.',
     onLethal(b, self) {
       if (self._lastStandUsed) return false;
@@ -112,7 +113,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   arcaneNova: {
-    id: 'arcaneNova', name: 'Arcane Nova', icon: '💥', tier: 0, kind: 'active',
+    id: 'arcaneNova', name: 'Arcane Nova', icon: ic('burst'), tier: 0, kind: 'active',
     cd: 7.5, range: 15, radius: 4.4,
     desc: (self) => `Detonates arcane force at the densest cluster of enemies, dealing ${Math.round(S(self || {}, 46))} arcane damage in a ${4.4}m circle.`,
     want: (b, self) => !!bestCluster(b, self, 15, 4.4, 2),
@@ -132,7 +133,7 @@ export const ABILITIES = {
   },
 
   manaShield: {
-    id: 'manaShield', name: 'Mana Shield', icon: '🔵', tier: 2, kind: 'onDamaged',
+    id: 'manaShield', name: 'Mana Shield', icon: ic('ward'), tier: 2, kind: 'onDamaged',
     cd: 14,
     desc: () => 'When first brought below half health, raises a ward that absorbs damage.',
     run(b, self, ctx) {
@@ -145,7 +146,7 @@ export const ABILITIES = {
   },
 
   emberbolt: {
-    id: 'emberbolt', name: 'Emberbolt', icon: '🔥', tier: 3, kind: 'onHit',
+    id: 'emberbolt', name: 'Emberbolt', icon: ic('flame'), tier: 3, kind: 'onHit',
     desc: () => 'Every third bolt ignites the target, burning it for 6s. Devastating on anything oiled.',
     run(b, self, ctx) {
       self._emberN = (self._emberN || 0) + 1;
@@ -156,7 +157,7 @@ export const ABILITIES = {
   },
 
   elementalMastery: {
-    id: 'elementalMastery', name: 'Elemental Mastery', icon: '🌈', tier: 4, awaken: true, kind: 'passive',
+    id: 'elementalMastery', name: 'Elemental Mastery', icon: ic('rainbow'), tier: 4, awaken: true, kind: 'passive',
     desc: () => 'Cycles between fire, frost and arcane with each cast — fire burns, frost chills, arcane sunders. No enemy can armour itself against all three.',
     cycle: ['fire', 'frost', 'arcane'],
     pickType(self) {
@@ -179,7 +180,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   groundSlam: {
-    id: 'groundSlam', name: 'Ground Slam', icon: '👊', tier: 0, kind: 'active',
+    id: 'groundSlam', name: 'Ground Slam', icon: ic('fist'), tier: 0, kind: 'active',
     cd: 8.5, radius: 5.2,
     desc: (self) => `Smashes the earth for ${Math.round(S(self || {}, 62))} blunt damage in a wide ring, staggering everything caught in it.`,
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 5.2).length >= 2,
@@ -200,19 +201,19 @@ export const ABILITIES = {
   },
 
   wallbreaker: {
-    id: 'wallbreaker', name: 'Wallbreaker', icon: '🏚', tier: 2, kind: 'passive',
+    id: 'wallbreaker', name: 'Wallbreaker', icon: ic('ruin'), tier: 2, kind: 'passive',
     desc: () => 'Deals 90% more damage to towers and banners.',
     mods: { structureMult: 1.9 },
   },
 
   unstoppable: {
-    id: 'unstoppable', name: 'Unstoppable', icon: '🦶', tier: 3, kind: 'passive',
+    id: 'unstoppable', name: 'Unstoppable', icon: ic('boots'), tier: 3, kind: 'passive',
     desc: () => 'Immune to knockback and stuns, and tramples small units it walks through for blunt damage.',
     mods: { ccImmune: true, trample: 18 },
   },
 
   titanfall: {
-    id: 'titanfall', name: 'Titanfall', icon: '🌋', tier: 4, awaken: true, kind: 'onDeath',
+    id: 'titanfall', name: 'Titanfall', icon: ic('volcano'), tier: 4, awaken: true, kind: 'onDeath',
     desc: () => 'Its corpse lands like a siege stone: heavy blunt damage in a wide circle, and the ground stays broken and slow for 8s.',
     run(b, self) {
       b.fx('crater', self.x, 0.1, self.z, { scale: 7 });
@@ -229,13 +230,13 @@ export const ABILITIES = {
      ======================================================================= */
 
   braceForCharge: {
-    id: 'braceForCharge', name: 'Set Spears', icon: '🔱', tier: 0, kind: 'passive',
+    id: 'braceForCharge', name: 'Set Spears', icon: ic('trident'), tier: 0, kind: 'passive',
     desc: () => 'Deals 120% bonus damage to large units (mass 3+) and to anything that charges into it.',
     onOutgoing(self, target, dmg) { return target.mass >= 3 ? dmg * 2.2 : dmg; },
   },
 
   phalanx: {
-    id: 'phalanx', name: 'Phalanx', icon: '🟰', tier: 2, kind: 'aura',
+    id: 'phalanx', name: 'Phalanx', icon: ic('link'), tier: 2, kind: 'aura',
     radius: 3.2,
     desc: () => 'For each other spear-wall ally standing shoulder to shoulder, gains +18% damage and +4 armour. Three of them are a wall.',
     aura(b, self) {
@@ -246,7 +247,7 @@ export const ABILITIES = {
   },
 
   volley: {
-    id: 'volley', name: 'Volley', icon: '🏹', tier: 0, kind: 'active',
+    id: 'volley', name: 'Volley', icon: ic('bow'), tier: 0, kind: 'active',
     cd: 11, range: 20, radius: 3.4,
     desc: (self) => `Arcs a rain of arrows onto a marked spot after 1.1s — ${Math.round(S(self || {}, 26))} pierce damage per arrow, three arrows.`,
     want: (b, self) => !!bestCluster(b, self, 20, 3.4, 2),
@@ -266,13 +267,13 @@ export const ABILITIES = {
   },
 
   highGround: {
-    id: 'highGround', name: 'Keen Eye', icon: '👁', tier: 2, kind: 'passive',
+    id: 'highGround', name: 'Keen Eye', icon: ic('eye'), tier: 2, kind: 'passive',
     desc: () => 'On high ground: +25% range and +20% damage. Archers on the ridge are worth two on the flat.',
     onRecalc(self, m) { if (self.onHighGround) { m.rangeMult *= 1.25; m.dmgMult *= 1.2; } },
   },
 
   pinningShot: {
-    id: 'pinningShot', name: 'Pinning Shot', icon: '📌', tier: 3, kind: 'onHit',
+    id: 'pinningShot', name: 'Pinning Shot', icon: ic('pin'), tier: 3, kind: 'onHit',
     desc: () => 'Every fourth arrow roots the target for 1.2s.',
     run(b, self, ctx) {
       self._pinN = (self._pinN || 0) + 1;
@@ -283,7 +284,7 @@ export const ABILITIES = {
   },
 
   swarmTactics: {
-    id: 'swarmTactics', name: 'Swarm', icon: '🐜', tier: 0, kind: 'aura',
+    id: 'swarmTactics', name: 'Swarm', icon: ic('swarm'), tier: 0, kind: 'aura',
     radius: 4.5,
     desc: () => '+12% attack speed for each nearby ally of the same kind, up to +48%. Numbers are their own weapon.',
     aura(b, self) {
@@ -294,7 +295,7 @@ export const ABILITIES = {
   },
 
   scout: {
-    id: 'scout', name: 'Outrider', icon: '🔍', tier: 0, kind: 'aura',
+    id: 'scout', name: 'Outrider', icon: ic('reveal'), tier: 0, kind: 'aura',
     radius: 12,
     desc: () => 'Reveals hidden enemies nearby and makes them targetable. Assassins hate this unit.',
     aura(b, self) {
@@ -303,7 +304,7 @@ export const ABILITIES = {
   },
 
   sabotage: {
-    id: 'sabotage', name: 'Sapper Charge', icon: '🧨', tier: 0, kind: 'onDeath',
+    id: 'sabotage', name: 'Sapper Charge', icon: ic('bomb'), tier: 0, kind: 'onDeath',
     desc: () => 'Detonates the powder keg on death: heavy blunt damage to structures and everything standing next to it.',
     run(b, self) {
       b.fx('explosion', self.x, 0.6, self.z, { scale: 4 });
@@ -321,7 +322,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   mendWounds: {
-    id: 'mendWounds', name: 'Mend', icon: '💚', tier: 0, kind: 'active',
+    id: 'mendWounds', name: 'Mend', icon: ic('heal'), tier: 0, kind: 'active',
     cd: 3.6, range: 11,
     desc: (self) => `Heals the most wounded ally within 11m for ${Math.round(S(self || {}, 52))}.`,
     want: (b, self) => !!b.lowestHpAlly(self, 11, { hurtOnly: true }),
@@ -336,7 +337,7 @@ export const ABILITIES = {
   },
 
   sanctuary: {
-    id: 'sanctuary', name: 'Sanctuary', icon: '⛪', tier: 2, kind: 'aura',
+    id: 'sanctuary', name: 'Sanctuary', icon: ic('chapel'), tier: 2, kind: 'aura',
     radius: 6.5,
     desc: () => 'Allies inside the circle take 12% less damage. Stacks with a guardian in front for a genuinely immovable line.',
     aura(b, self) {
@@ -345,7 +346,7 @@ export const ABILITIES = {
   },
 
   purge: {
-    id: 'purge', name: 'Purge', icon: '🕊', tier: 3, kind: 'active',
+    id: 'purge', name: 'Purge', icon: ic('dove'), tier: 3, kind: 'active',
     cd: 13, range: 10,
     desc: () => 'Strips every curse, poison, burn and chill from nearby allies and blesses the most wounded one.',
     want: (b, self) => b.alliesNear(self, self.x, self.z, 10).some(a => a.statuses.some(s => s.debuff)),
@@ -360,7 +361,7 @@ export const ABILITIES = {
   },
 
   martyrdom: {
-    id: 'martyrdom', name: 'Martyrdom', icon: '✝', tier: 4, awaken: true, kind: 'onDeath',
+    id: 'martyrdom', name: 'Martyrdom', icon: ic('cross'), tier: 4, awaken: true, kind: 'onDeath',
     desc: () => 'On death, heals every ally in 12m to full-ish and blesses them for 8s. Killing the healer becomes a trap.',
     run(b, self) {
       for (const a of b.alliesNear(self, self.x, self.z, 12)) {
@@ -374,7 +375,7 @@ export const ABILITIES = {
   },
 
   warBanner: {
-    id: 'warBanner', name: 'War Banner', icon: '🚩', tier: 0, kind: 'aura',
+    id: 'warBanner', name: 'War Banner', icon: ic('banner'), tier: 0, kind: 'aura',
     radius: 8,
     desc: () => 'Allies under the banner are Rallied: +15% damage and immune to fear.',
     aura(b, self) {
@@ -384,7 +385,7 @@ export const ABILITIES = {
   },
 
   logistics: {
-    id: 'logistics', name: 'Field Logistics', icon: '📯', tier: 2, kind: 'passive',
+    id: 'logistics', name: 'Field Logistics', icon: ic('horn'), tier: 2, kind: 'passive',
     desc: () => 'While this unit lives, your Command regenerates 14% faster.',
     commandRegenBonus: 0.14,
   },
@@ -394,20 +395,20 @@ export const ABILITIES = {
      ======================================================================= */
 
   shadowstep: {
-    id: 'shadowstep', name: 'Shadowstep', icon: '🌑', tier: 0, kind: 'onSpawn',
+    id: 'shadowstep', name: 'Shadowstep', icon: ic('void'), tier: 0, kind: 'onSpawn',
     desc: () => 'Enters the field hidden. Cannot be targeted until it strikes, and the first strike is a backstab.',
     run(b, self) { b.applyStatus(self, 'stealthed', 6, { src: self }); },
   },
 
   markTheWeak: {
-    id: 'markTheWeak', name: 'Hunt the Soft', icon: '🎯', tier: 0, kind: 'passive',
+    id: 'markTheWeak', name: 'Hunt the Soft', icon: ic('target'), tier: 0, kind: 'passive',
     desc: () => 'Ignores the frontline entirely: seeks out enemy casters, healers and archers, and deals +45% damage to unarmoured targets.',
     targetPriority: ['support', 'ranged', 'caster', 'siege'],
     onOutgoing(self, target, dmg) { return target.armorType === 'unarmored' ? dmg * 1.45 : dmg; },
   },
 
   vanish: {
-    id: 'vanish', name: 'Vanish', icon: '💨', tier: 2, kind: 'onKill',
+    id: 'vanish', name: 'Vanish', icon: ic('wind'), tier: 2, kind: 'onKill',
     desc: () => 'After a kill, slips back into the shadows for 3s and refreshes its backstab.',
     run(b, self) {
       b.applyStatus(self, 'stealthed', 3, { src: self });
@@ -416,13 +417,13 @@ export const ABILITIES = {
   },
 
   exsanguinate: {
-    id: 'exsanguinate', name: 'Exsanguinate', icon: '🩸', tier: 3, kind: 'onHit',
+    id: 'exsanguinate', name: 'Exsanguinate', icon: ic('drop'), tier: 3, kind: 'onHit',
     desc: () => 'Every strike stacks Bleeding. The target bleeds out as it chases.',
     run(b, self, ctx) { b.applyStatus(ctx.target, 'bleeding', 5, { src: self, dps: S(self, 10) }); },
   },
 
   deathmark: {
-    id: 'deathmark', name: 'Death Mark', icon: '☠', tier: 4, awaken: true, kind: 'active',
+    id: 'deathmark', name: 'Death Mark', icon: ic('skull'), tier: 4, awaken: true, kind: 'active',
     cd: 18, range: 22,
     desc: () => 'Marks the single most dangerous enemy on the field. Teleports behind it and executes it outright below 22% health.',
     want: (b, self) => !!b.highestThreatEnemy(self, 22),
@@ -448,7 +449,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   taunt: {
-    id: 'taunt', name: 'Bellow', icon: '📢', tier: 0, kind: 'active',
+    id: 'taunt', name: 'Bellow', icon: ic('horn'), tier: 0, kind: 'active',
     cd: 10, radius: 8,
     desc: () => 'Forces every enemy within 8m to attack this unit for 3.5s. The reason your mage is still alive.',
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 8).length >= 2,
@@ -464,13 +465,13 @@ export const ABILITIES = {
   },
 
   bulwark: {
-    id: 'bulwark', name: 'Bulwark', icon: '🛡', tier: 2, kind: 'passive',
+    id: 'bulwark', name: 'Bulwark', icon: ic('shield'), tier: 2, kind: 'passive',
     desc: () => 'Takes 30% less damage from ranged attacks and cannot be knocked back.',
     mods: { rangedTakenMult: 0.7, ccImmune: true },
   },
 
   thornplate: {
-    id: 'thornplate', name: 'Thornplate', icon: '🌵', tier: 3, kind: 'onDamaged',
+    id: 'thornplate', name: 'Thornplate', icon: ic('thorns'), tier: 3, kind: 'onDamaged',
     desc: () => 'Attackers in melee take 30 blunt damage back per swing.',
     run(b, self, ctx) {
       if (!ctx.attacker || ctx.attacker.range > 4) return;
@@ -483,7 +484,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   packHunter: {
-    id: 'packHunter', name: 'Pack Hunter', icon: '🐺', tier: 0, kind: 'aura',
+    id: 'packHunter', name: 'Pack Hunter', icon: ic('wolf'), tier: 0, kind: 'aura',
     radius: 6,
     desc: () => '+14% damage per nearby pack-mate. Alone it is a nuisance; in a pack it is a problem.',
     aura(b, self) {
@@ -494,7 +495,7 @@ export const ABILITIES = {
   },
 
   pounce: {
-    id: 'pounce', name: 'Pounce', icon: '🐾', tier: 2, kind: 'active',
+    id: 'pounce', name: 'Pounce', icon: ic('paw'), tier: 2, kind: 'active',
     cd: 7, range: 11,
     desc: () => 'Leaps onto a ranged or support target, knocking it down for 1s.',
     want: (b, self) => !!b.nearestEnemy(self, 11, { prefer: ['ranged', 'support', 'caster'] }),
@@ -511,13 +512,13 @@ export const ABILITIES = {
   },
 
   bloodFrenzy: {
-    id: 'bloodFrenzy', name: 'Blood Frenzy', icon: '💢', tier: 0, kind: 'onDamaged',
+    id: 'bloodFrenzy', name: 'Blood Frenzy', icon: ic('rage'), tier: 0, kind: 'onDamaged',
     desc: () => 'Every wound taken stacks Enraged: +12% damage and +10% attack speed, up to five times.',
     run(b, self) { b.applyStatus(self, 'enraged', 7, { src: self, stacks: 1 }); },
   },
 
   venomBreath: {
-    id: 'venomBreath', name: 'Venom Breath', icon: '🟢', tier: 0, kind: 'active',
+    id: 'venomBreath', name: 'Venom Breath', icon: ic('poison'), tier: 0, kind: 'active',
     cd: 9, range: 13, cone: 0.7,
     desc: (self) => `Breathes a cone of venom: ${Math.round(S(self || {}, 30))} poison damage and heavy Poison stacks. Useless against the undead.`,
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 13).length >= 1,
@@ -535,7 +536,7 @@ export const ABILITIES = {
   },
 
   diveAttack: {
-    id: 'diveAttack', name: 'Dive', icon: '🦅', tier: 0, kind: 'active',
+    id: 'diveAttack', name: 'Dive', icon: ic('bird'), tier: 0, kind: 'active',
     cd: 8, range: 16,
     desc: () => 'Folds its wings and drops on a target for triple damage, then climbs back out of melee reach.',
     want: (b, self) => !!b.nearestEnemy(self, 16),
@@ -552,19 +553,19 @@ export const ABILITIES = {
   },
 
   flying: {
-    id: 'flying', name: 'Flying', icon: '🪽', tier: 0, kind: 'passive',
+    id: 'flying', name: 'Flying', icon: ic('wing'), tier: 0, kind: 'passive',
     desc: () => 'Ignores terrain, chokepoints and ground units entirely. Only ranged attacks can reach it.',
     mods: { flying: true },
   },
 
   regrowth: {
-    id: 'regrowth', name: 'Heartwood', icon: '🌳', tier: 0, kind: 'onSpawn',
+    id: 'regrowth', name: 'Heartwood', icon: ic('forest'), tier: 0, kind: 'onSpawn',
     desc: () => 'Constantly knits itself back together. Whittling it down with chip damage does not work.',
     run(b, self) { b.applyStatus(self, 'regenerating', 9999, { src: self, hps: S(self, 16) }); },
   },
 
   entangle: {
-    id: 'entangle', name: 'Entangle', icon: '🌿', tier: 2, kind: 'active',
+    id: 'entangle', name: 'Entangle', icon: ic('leaf'), tier: 2, kind: 'active',
     cd: 11, range: 12, radius: 4,
     desc: () => 'Roots everything in a 4m circle for 2.2s. Turns a bridge into a wall.',
     want: (b, self) => !!bestCluster(b, self, 12, 4, 2),
@@ -583,20 +584,20 @@ export const ABILITIES = {
      ======================================================================= */
 
   siegeShot: {
-    id: 'siegeShot', name: 'Siege Shot', icon: '🪨', tier: 0, kind: 'passive',
+    id: 'siegeShot', name: 'Siege Shot', icon: ic('rock'), tier: 0, kind: 'passive',
     desc: () => 'Attacks land as a splash instead of a single hit, and only structures are worth the stone.',
     splash: 3.6, structurePriority: true,
     mods: { structureMult: 2.2 },
   },
 
   minimumRange: {
-    id: 'minimumRange', name: 'Minimum Range', icon: '🚫', tier: 0, kind: 'passive',
+    id: 'minimumRange', name: 'Minimum Range', icon: ic('ban'), tier: 0, kind: 'passive',
     desc: () => 'Cannot fire at anything closer than 8m. Leave it unescorted and it is free kills for the enemy.',
     minRange: 8,
   },
 
   ranging: {
-    id: 'ranging', name: 'Ranging Shot', icon: '📐', tier: 2, kind: 'passive',
+    id: 'ranging', name: 'Ranging Shot', icon: ic('angle'), tier: 2, kind: 'passive',
     desc: () => 'Each consecutive shot at the same target does 20% more damage, up to +60%. Punishes anyone who stands still.',
     onOutgoing(self, target, dmg) {
       if (self._lastTgt === target.id) self._rangeN = Math.min(3, (self._rangeN || 0) + 1);
@@ -606,7 +607,7 @@ export const ABILITIES = {
   },
 
   crewed: {
-    id: 'crewed', name: 'Crewed', icon: '👥', tier: 0, kind: 'onSpawn',
+    id: 'crewed', name: 'Crewed', icon: ic('group'), tier: 0, kind: 'onSpawn',
     desc: () => 'Arrives with two crew who defend it. Kill the crew and the engine is helpless.',
     run(b, self) {
       for (let i = 0; i < 2; i++)
@@ -619,7 +620,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   frostbite: {
-    id: 'frostbite', name: 'Frostbite', icon: '❄', tier: 0, kind: 'onHit',
+    id: 'frostbite', name: 'Frostbite', icon: ic('frost'), tier: 0, kind: 'onHit',
     desc: () => 'Every hit chills. Four stacks of chill freeze the target solid for 1.5s.',
     run(b, self, ctx) {
       b.applyStatus(ctx.target, 'slowed', 4, { src: self, stacks: 1 });
@@ -634,7 +635,7 @@ export const ABILITIES = {
   },
 
   blizzard: {
-    id: 'blizzard', name: 'Blizzard', icon: '🌨', tier: 3, kind: 'active',
+    id: 'blizzard', name: 'Blizzard', icon: ic('frost'), tier: 3, kind: 'active',
     cd: 16, range: 16, radius: 5.5, dur: 5,
     desc: () => 'A standing storm: everything inside is chilled and takes frost damage for 5s. The single best answer to a swarm push.',
     want: (b, self) => !!bestCluster(b, self, 16, 5.5, 3),
@@ -654,7 +655,7 @@ export const ABILITIES = {
   },
 
   chainLightning: {
-    id: 'chainLightning', name: 'Chain Lightning', icon: '⚡', tier: 0, kind: 'active',
+    id: 'chainLightning', name: 'Chain Lightning', icon: ic('stamina'), tier: 0, kind: 'active',
     cd: 6.5, range: 15, jumps: 4,
     desc: (self) => `Arcs between up to 4 enemies for ${Math.round(S(self || {}, 40))} arcane damage, losing 15% each jump. Dense formations are a liability.`,
     want: (b, self) => !!b.nearestEnemy(self, 15),
@@ -676,7 +677,7 @@ export const ABILITIES = {
   },
 
   firestorm: {
-    id: 'firestorm', name: 'Firestorm', icon: '🔥', tier: 0, kind: 'active',
+    id: 'firestorm', name: 'Firestorm', icon: ic('flame'), tier: 0, kind: 'active',
     cd: 12, range: 17, radius: 4.8, dur: 4,
     desc: () => 'Sets a patch of ground alight for 4s. Anything oiled that walks in dies.',
     want: (b, self) => !!bestCluster(b, self, 17, 4.8, 2),
@@ -699,7 +700,7 @@ export const ABILITIES = {
   },
 
   slickOil: {
-    id: 'slickOil', name: 'Oil Flask', icon: '🛢', tier: 0, kind: 'active',
+    id: 'slickOil', name: 'Oil Flask', icon: ic('barrel'), tier: 0, kind: 'active',
     cd: 8, range: 14, radius: 4.2,
     desc: () => 'Coats enemies in oil for 9s: they take 85% more fire damage. Worthless alone — brutal next to any fire unit.',
     want: (b, self) => !!bestCluster(b, self, 14, 4.2, 2),
@@ -715,7 +716,7 @@ export const ABILITIES = {
   },
 
   silence: {
-    id: 'silence', name: 'Seal of Silence', icon: '🤐', tier: 0, kind: 'active',
+    id: 'silence', name: 'Seal of Silence', icon: ic('silence'), tier: 0, kind: 'active',
     cd: 13, range: 15, radius: 5,
     desc: () => 'Seals enemy abilities in a 5m circle for 4s. Turns an enemy archmage into a man with a stick.',
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 15).some(e => e.role === 'caster' || e.role === 'support'),
@@ -729,13 +730,13 @@ export const ABILITIES = {
   },
 
   empoweredCast: {
-    id: 'empoweredCast', name: 'Gathering Storm', icon: '🔮', tier: 2, kind: 'passive',
+    id: 'empoweredCast', name: 'Gathering Storm', icon: ic('orb'), tier: 2, kind: 'passive',
     desc: () => 'Every ability cast stacks Empowered: +18% ability damage, up to three stacks. The longer it is left alone, the worse the next spell is.',
     onCast(b, self) { b.applyStatus(self, 'empowered', 10, { src: self, stacks: 1 }); },
   },
 
   cursedAura: {
-    id: 'cursedAura', name: 'Pall of the Crown', icon: '☠', tier: 2, kind: 'aura',
+    id: 'cursedAura', name: 'Pall of the Crown', icon: ic('skull'), tier: 2, kind: 'aura',
     radius: 9,
     desc: () => 'Enemies within 9m deal 12% less damage and cannot be healed above 80% health.',
     aura(b, self) {
@@ -747,7 +748,7 @@ export const ABILITIES = {
   },
 
   antimagic: {
-    id: 'antimagic', name: 'Antimagic Field', icon: '🚯', tier: 2, kind: 'aura',
+    id: 'antimagic', name: 'Antimagic Field', icon: ic('ban'), tier: 2, kind: 'aura',
     radius: 7,
     desc: () => 'Allies nearby take 35% less magical damage. A hard counter to caster-heavy armies.',
     aura(b, self) {
@@ -760,7 +761,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   raiseDead: {
-    id: 'raiseDead', name: 'Raise Dead', icon: '⚰', tier: 0, kind: 'active',
+    id: 'raiseDead', name: 'Raise Dead', icon: ic('coffin'), tier: 0, kind: 'active',
     cd: 5, range: 12,
     desc: () => 'Raises a Ghoul from any corpse within 12m — friend or foe. Every fight it loses feeds it.',
     want: (b, self) => b.corpsesNear(self.x, self.z, 12).length > 0,
@@ -776,7 +777,7 @@ export const ABILITIES = {
   },
 
   summonSkeletons: {
-    id: 'summonSkeletons', name: 'Call the Bones', icon: '🦴', tier: 0, kind: 'active',
+    id: 'summonSkeletons', name: 'Call the Bones', icon: ic('bone'), tier: 0, kind: 'active',
     cd: 11, count: 3,
     desc: () => 'Pulls three skeletons out of the ground beside it. They are weak, expendable and endless.',
     want: () => true,
@@ -792,13 +793,13 @@ export const ABILITIES = {
   },
 
   soulHarvest: {
-    id: 'soulHarvest', name: 'Soul Harvest', icon: '👻', tier: 2, kind: 'onDeath',
+    id: 'soulHarvest', name: 'Soul Harvest', icon: ic('ghost'), tier: 2, kind: 'onDeath',
     desc: () => 'When one of its summons dies, this unit heals. Grinding through the minions feeds the summoner.',
     onMinionDeath(b, self) { b.heal(self, S(self, 30), self); },
   },
 
   plague: {
-    id: 'plague', name: 'Plague', icon: '🦠', tier: 3, kind: 'onHit',
+    id: 'plague', name: 'Plague', icon: ic('plague'), tier: 3, kind: 'onHit',
     desc: () => 'Poison spreads from the target to everything within 4m when it dies.',
     run(b, self, ctx) {
       b.applyStatus(ctx.target, 'poisoned', 7, { src: self, dps: S(self, 11), stacks: 1, spread: true });
@@ -810,7 +811,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   charge: {
-    id: 'charge', name: 'Charge', icon: '🐎', tier: 0, kind: 'active',
+    id: 'charge', name: 'Charge', icon: ic('horse'), tier: 0, kind: 'active',
     cd: 10, range: 18,
     desc: () => 'Builds speed over 18m and slams through the enemy line, knocking everything aside. Wasted if there is no room to run.',
     want: (b, self) => { const t = b.nearestEnemy(self, 18); return t && Math.hypot(t.x - self.x, t.z - self.z) > 8; },
@@ -831,7 +832,7 @@ export const ABILITIES = {
   },
 
   momentum: {
-    id: 'momentum', name: 'Momentum', icon: '💨', tier: 2, kind: 'passive',
+    id: 'momentum', name: 'Momentum', icon: ic('wind'), tier: 2, kind: 'passive',
     desc: () => 'Damage scales with how fast it is moving — up to +50% at a full gallop. Standing still, it is just a horse.',
     onOutgoing(self, target, dmg) {
       // A rooted, frozen or braced unit has moveSpeed 0, and 0/0 is NaN — which
@@ -843,7 +844,7 @@ export const ABILITIES = {
   },
 
   trample: {
-    id: 'trample', name: 'Trample', icon: '🐴', tier: 3, kind: 'passive',
+    id: 'trample', name: 'Trample', icon: ic('horse'), tier: 3, kind: 'passive',
     desc: () => 'Runs straight through units of mass 1, hurting them as it passes.',
     mods: { trample: 26 },
   },
@@ -853,7 +854,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   bloodlust: {
-    id: 'bloodlust', name: 'Bloodlust', icon: '🩸', tier: 0, kind: 'passive',
+    id: 'bloodlust', name: 'Bloodlust', icon: ic('drop'), tier: 0, kind: 'passive',
     desc: () => 'Gains up to +80% attack speed and +45% damage as its health falls. At death\'s door it is at its most dangerous.',
     onRecalc(self, m) {
       const missing = 1 - self.hp / self.maxHp;
@@ -863,13 +864,13 @@ export const ABILITIES = {
   },
 
   execute: {
-    id: 'execute', name: 'Execute', icon: '🗡', tier: 2, kind: 'passive',
+    id: 'execute', name: 'Execute', icon: ic('dagger'), tier: 2, kind: 'passive',
     desc: () => 'Deals double damage to enemies below 30% health. Finishes fights instead of prolonging them.',
     onOutgoing(self, target, dmg) { return (target.hp / target.maxHp < 0.3) ? dmg * 2 : dmg; },
   },
 
   riposte: {
-    id: 'riposte', name: 'Riposte', icon: '⚔', tier: 3, kind: 'onDamaged',
+    id: 'riposte', name: 'Riposte', icon: ic('swords'), tier: 3, kind: 'onDamaged',
     desc: () => 'A 25% chance to parry a melee blow outright and counter for 70 slash damage.',
     run(b, self, ctx) {
       if (!ctx.attacker || ctx.attacker.range > 4 || !rng.chance(0.25)) return;
@@ -881,7 +882,7 @@ export const ABILITIES = {
   },
 
   whirlwind: {
-    id: 'whirlwind', name: 'Whirlwind', icon: '🌀', tier: 0, kind: 'active',
+    id: 'whirlwind', name: 'Whirlwind', icon: ic('vortex'), tier: 0, kind: 'active',
     cd: 7, radius: 3.6,
     desc: (self) => `Spins through everything within 3.6m for ${Math.round(S(self || {}, 42))} slash damage, three times.`,
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 3.6).length >= 2,
@@ -902,7 +903,7 @@ export const ABILITIES = {
      ======================================================================= */
 
   meteor: {
-    id: 'meteor', name: 'Meteor', icon: '☄', tier: 0, kind: 'active',
+    id: 'meteor', name: 'Meteor', icon: ic('comet'), tier: 0, kind: 'active',
     cd: 22, range: 26, radius: 7,
     desc: (self) => `Calls down a mountain. After a 2s telegraph: ${Math.round(S(self || {}, 260))} fire damage in a 7m crater, and the ground burns for 6s.`,
     want: (b, self) => !!bestCluster(b, self, 26, 7, 3),
@@ -924,7 +925,7 @@ export const ABILITIES = {
   },
 
   rebirth: {
-    id: 'rebirth', name: 'Rebirth', icon: '🔥', tier: 0, kind: 'onDeath',
+    id: 'rebirth', name: 'Rebirth', icon: ic('flame'), tier: 0, kind: 'onDeath',
     desc: () => 'Burns to ash and rises again at 60% health, once per battle, immolating everything nearby as it returns.',
     run(b, self) {
       if (self._reborn) return;
@@ -942,7 +943,7 @@ export const ABILITIES = {
   },
 
   immortalHost: {
-    id: 'immortalHost', name: 'Immortal Host', icon: '👑', tier: 0, kind: 'aura',
+    id: 'immortalHost', name: 'Immortal Host', icon: ic('crown'), tier: 0, kind: 'aura',
     radius: 14, interval: 6,
     desc: () => 'Every 6s, raises a Wight from the nearest corpse and curses a living enemy. The longer the battle runs, the worse it gets for you.',
     aura(b, self) {
@@ -960,7 +961,7 @@ export const ABILITIES = {
   },
 
   sunblade: {
-    id: 'sunblade', name: 'Sunblade', icon: '🌟', tier: 0, kind: 'onHit',
+    id: 'sunblade', name: 'Sunblade', icon: ic('star'), tier: 0, kind: 'onHit',
     desc: () => 'Every strike is holy: annihilates undead, and every third strike heals the nearest wounded ally for a third of the damage dealt.',
     run(b, self, ctx) {
       self._sunN = (self._sunN || 0) + 1;
@@ -971,7 +972,7 @@ export const ABILITIES = {
   },
 
   voidPhase: {
-    id: 'voidPhase', name: 'Void Phase', icon: '🌀', tier: 0, kind: 'passive',
+    id: 'voidPhase', name: 'Void Phase', icon: ic('vortex'), tier: 0, kind: 'passive',
     desc: () => 'Exists only partly in this world: ignores armour entirely, and every 5s it blinks out for 1s, untouchable.',
     mods: { ignoreArmor: true },
     tickInterval: 5,
@@ -982,7 +983,7 @@ export const ABILITIES = {
   },
 
   cataclysm: {
-    id: 'cataclysm', name: 'Cataclysm', icon: '🌋', tier: 0, kind: 'active',
+    id: 'cataclysm', name: 'Cataclysm', icon: ic('volcano'), tier: 0, kind: 'active',
     cd: 34, range: 40,
     desc: () => 'Ends things. Three meteors walk across the enemy half of the field, each leaving burning ground behind.',
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 40).length >= 3,
@@ -1008,7 +1009,7 @@ export const ABILITIES = {
   },
 
   dominate: {
-    id: 'dominate', name: 'The Hollow Crown', icon: '👑', tier: 0, kind: 'onKill',
+    id: 'dominate', name: 'The Hollow Crown', icon: ic('crown'), tier: 0, kind: 'onKill',
     desc: () => 'Anything it kills rises again fighting for you, at half strength, for 20s. Every enemy on the field is a potential recruit.',
     run(b, self, ctx) {
       if (!ctx.victim || ctx.victim.summoned || ctx.victim.isStructure) return;
@@ -1021,7 +1022,7 @@ export const ABILITIES = {
   },
 
   everburning: {
-    id: 'everburning', name: 'Everburning', icon: '🔥', tier: 0, kind: 'aura',
+    id: 'everburning', name: 'Everburning', icon: ic('flame'), tier: 0, kind: 'aura',
     radius: 6,
     desc: () => 'Permanently sets fire to the ground it walks over. Denies whole lanes.',
     aura(b, self) {
@@ -1033,7 +1034,7 @@ export const ABILITIES = {
   },
 
   quake: {
-    id: 'quake', name: 'Quake', icon: '🌎', tier: 0, kind: 'active',
+    id: 'quake', name: 'Quake', icon: ic('globe'), tier: 0, kind: 'active',
     cd: 14, radius: 9,
     desc: () => 'Every step is a tremor. Stuns and damages everything in a 9m radius, and cracks structures within it.',
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 9).length >= 2,
@@ -1052,14 +1053,14 @@ export const ABILITIES = {
   },
 
   reflectSpells: {
-    id: 'reflectSpells', name: 'Runic Skin', icon: '🪬', tier: 0, kind: 'passive',
+    id: 'reflectSpells', name: 'Runic Skin', icon: ic('talisman'), tier: 0, kind: 'passive',
     desc: () => 'Reflects 35% of all magical damage back at the caster. Arcane armies break themselves on it.',
     reflectMagic: 0.35,
     mods: { magicTakenMult: 0.7 },
   },
 
   tentacles: {
-    id: 'tentacles', name: 'Dragging Tentacles', icon: '🐙', tier: 0, kind: 'active',
+    id: 'tentacles', name: 'Dragging Tentacles', icon: ic('kraken'), tier: 0, kind: 'active',
     cd: 9, range: 14,
     desc: () => 'Hauls the three nearest enemies into melee range and roots them. Ranged armies suddenly find themselves in a knife fight.',
     want: (b, self) => b.enemiesNear(self, self.x, self.z, 14).length >= 2,
@@ -1081,13 +1082,13 @@ export const ABILITIES = {
      ======================================================================= */
 
   totemBound: {
-    id: 'totemBound', name: 'Totem-Bound', icon: '🗿', tier: 0, kind: 'passive',
+    id: 'totemBound', name: 'Totem-Bound', icon: ic('statue'), tier: 0, kind: 'passive',
     desc: () => 'Takes 85% less damage while its totems still stand. Destroy them first.',
     onRecalc(self, m) { if (self.battleRef?.aliveTotems > 0) m.dmgTakenMult *= 0.15; },
   },
 
   summonWave: {
-    id: 'summonWave', name: 'Endless Horde', icon: '🪓', tier: 0, kind: 'active',
+    id: 'summonWave', name: 'Endless Horde', icon: ic('axe'), tier: 0, kind: 'active',
     cd: 14,
     desc: () => 'Calls a fresh wave of warriors from off the field every 14s.',
     want: () => true,
@@ -1104,7 +1105,7 @@ export const ABILITIES = {
   },
 
   commandTheft: {
-    id: 'commandTheft', name: 'Cutpurse', icon: '💰', tier: 0, kind: 'active',
+    id: 'commandTheft', name: 'Cutpurse', icon: ic('purse'), tier: 0, kind: 'active',
     cd: 17,
     desc: () => 'Steals 2 Command from the enemy commander.',
     want: () => true,
@@ -1119,7 +1120,7 @@ export const ABILITIES = {
   },
 
   rotatingWard: {
-    id: 'rotatingWard', name: 'Rotating Ward', icon: '🛡', tier: 0, kind: 'passive',
+    id: 'rotatingWard', name: 'Rotating Ward', icon: ic('shield'), tier: 0, kind: 'passive',
     desc: () => 'Immune to one damage type at a time; the ward rotates every 8s. Its colour tells you which. Bring a mixed army or bring nothing.',
     cycle: ['slash', 'pierce', 'arcane', 'fire'],
     current(self, t) { return this.cycle[Math.floor(t / 8) % this.cycle.length]; },
@@ -1127,12 +1128,12 @@ export const ABILITIES = {
   },
 
   pylonLinked: {
-    id: 'pylonLinked', name: 'Pylon-Linked', icon: '🔷', tier: 0, kind: 'passive',
+    id: 'pylonLinked', name: 'Pylon-Linked', icon: ic('crystal'), tier: 0, kind: 'passive',
     desc: () => 'Draws power from four pylons. Each one still standing grants a different, dangerous aura.',
   },
 
   enrageAtHalf: {
-    id: 'enrageAtHalf', name: 'Wrath', icon: '💢', tier: 0, kind: 'onDamaged',
+    id: 'enrageAtHalf', name: 'Wrath', icon: ic('rage'), tier: 0, kind: 'onDamaged',
     desc: () => 'Below half health it enrages permanently: +60% attack speed, +35% damage, and it hunts the enemy commander.',
     run(b, self) {
       if (self._wrath || self.hp > self.maxHp * 0.5) return;
@@ -1147,7 +1148,7 @@ export const ABILITIES = {
   },
 
   corpseExplosion: {
-    id: 'corpseExplosion', name: 'Corpse Bloom', icon: '💀', tier: 0, kind: 'active',
+    id: 'corpseExplosion', name: 'Corpse Bloom', icon: ic('skull'), tier: 0, kind: 'active',
     cd: 8, range: 16,
     desc: () => 'Detonates nearby corpses for poison damage. Burn the dead or drown in them.',
     want: (b, self) => b.corpsesNear(self.x, self.z, 16).length >= 2,

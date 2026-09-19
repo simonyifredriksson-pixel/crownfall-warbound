@@ -258,7 +258,11 @@ export function nextActions() {
   if (q.length) out.push({ kind: 'quest', n: q.length, label: `${q.length} challenge${q.length > 1 ? 's' : ''} complete` });
 
   // deck not full
-  if (s.deck.length < CFG.battle.deckSize) out.push({ kind: 'deck', n: 1, label: 'Your army is not full' });
+  // only nag when there is a free slot AND a card to put in it
+  const cap = State.deckCapacity();
+  if (s.deck.length < cap && Object.keys(s.cards).length > s.deck.length) {
+    out.push({ kind: 'deck', n: cap - s.deck.length, label: `${cap - s.deck.length} empty army slot${cap - s.deck.length > 1 ? 's' : ''}` });
+  }
 
   return out;
 }

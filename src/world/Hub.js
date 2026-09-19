@@ -7,6 +7,7 @@
 */
 
 import * as THREE from '../../lib/three.module.js';
+import { MATS } from '../art/Palette.js';
 import { State } from '../game/State.js';
 import { UI } from '../ui/UI.js';
 import { input } from '../core/Input.js';
@@ -18,6 +19,10 @@ import { NPC, talkTo, closeDialogue, dialogueOpen } from './NPCs.js';
 import { buildCommanderModel, updateCommanderRig } from '../art/CommanderArt.js';
 import { nextActions } from '../game/Progression.js';
 import { clamp, clamp01, damp, angleDelta, lerp, TAU, esc } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
+import { AmbientCrowd } from './Ambient.js';
+import { Objective } from '../ui/Objective.js';
+import { Tutorial } from '../game/Tutorial.js';
 
 /** Character facing is atan2(dz, dx); the rig's yaw is atan2(dx, dz). */
 const yawFromFacing = a => Math.atan2(Math.cos(a), Math.sin(a));
@@ -50,9 +55,13 @@ export class Hub {
     this.zoneTitle = null;
     this.nearest = null;
     this.active = false;
+    this.crowd = null;
+    this.exitDoor = null;      // the door back to the courtyard, if any
+    this.exitBeacon = null;
 
     this._buildDock();
     this._buildPrompt();
+    this._buildExitBar();
   }
 
   /* ====================================================================== */
@@ -69,6 +78,7 @@ export class Hub {
     this.unload();
     this.dock.style.display = 'none';
     this.prompt.classList.add('hidden');
+    this.exitBar?.classList.add('hidden');
     closeDialogue();
   }
 
@@ -83,11 +93,10 @@ export class Hub {
     if (z.sky?.clouds) this.sky.addClouds(0xffffff, 12);
     else this.sky.addClouds(0xffffff, 0);
 
-    // zone lights
-    this.lightPool.releaseAll();
-    for (const l of z.lights || []) {
-      this.lightPool.claim(l.x, l.y, l.z, l.color, l.intensity, l.dist, l.flicker);
-    }
+    // Zone lights. The pool takes every source the zone declares and decides
+    // each frame which ones get a real light — a zone is free to be as lit as
+    // it likes without anyone counting draw calls by hand.
+    this.lightPool.setSources(z.lights || []);
 
     // NPCs
     for (const n of z.npcs || []) {
@@ -95,6 +104,17 @@ export class Hub {
       this.scene.add(npc.group);
       this.npcs.push(npc);
     }
+
+    // the garrison: nameless people going about their business
+    if (z.crowd?.length) this.crowd = new AmbientCrowd(this.scene, z.crowd);
+
+    /* --- the way back. Every zone that is not the courtyard gets a beacon
+       over its exit and a permanent bar at the top of the screen. Leaving
+       must never depend on the player happening to walk into the right
+       corner of the room. --- */
+    this.exitDoor = (z.doors || []).find(d => d.exit) || null;
+    this._buildExitBeacon();
+    this._refreshExitBar();
 
     // the player
     if (!this.rig) {
@@ -138,6 +158,7 @@ export class Hub {
 
     this._showZoneTitle(z);
     this._refreshDock();
+    Tutorial.setZone(zoneId);
     bus.emit(EV.ZONE_ENTER, { id: zoneId });
     audio.setMusic(zoneId === 'library' ? 'library' : zoneId === 'forge' ? 'forge' : 'hub');
   }
@@ -150,7 +171,57 @@ export class Hub {
     }
     for (const n of this.npcs) { this.scene.remove(n.group); n.dispose(); }
     this.npcs.length = 0;
+    if (this.crowd) { this.crowd.dispose(); this.crowd = null; }
+    if (this.exitBeacon) { this.scene.remove(this.exitBeacon); this.exitBeacon = null; }
     this.lightPool.releaseAll();
+  }
+
+  /* ---------------------------------------------------------- the way out */
+
+  /** A tall soft pillar of light over the exit, visible across the room. */
+  _buildExitBeacon() {
+    if (!this.exitDoor) return;
+    const g = new THREE.Group();
+    const col = 0xbcd6ec;
+    const shaft = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.9, 1.5, 9, 10, 1, true),
+      MATS.emissive(col, 0.13));
+    shaft.position.y = 4.5;
+    shaft.renderOrder = 3;
+    g.add(shaft);
+    const disc = new THREE.Mesh(
+      new THREE.RingGeometry(1.5, 2.4, 26),
+      MATS.emissive(col, 0.22));
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.y = 0.06;
+    disc.renderOrder = 3;
+    g.add(disc);
+    g.position.set(this.exitDoor.x, 0, this.exitDoor.z);
+    g.userData.pulse = (t) => {
+      const k = 0.88 + Math.sin(t * 1.5) * 0.12;
+      disc.scale.setScalar(k);
+      shaft.material.opacity = 0.10 + Math.sin(t * 1.5) * 0.035;
+    };
+    this.scene.add(g);
+    this.exitBeacon = g;
+  }
+
+  _buildExitBar() {
+    const el = document.createElement('div');
+    el.className = 'exitbar hidden';
+    el.innerHTML = `<span class="ex-ic">${ic('castle')}</span>
+      <span class="ex-t">Return to the Courtyard</span>
+      <span class="kbd">E</span><span class="ex-s">at the doorway</span>`;
+    el.addEventListener('click', () => {
+      if (this.zoneId && this.zoneId !== 'keep') { audio.play('ui.click'); this.transitionTo('keep'); }
+    });
+    document.getElementById('ui').appendChild(el);
+    this.exitBar = el;
+  }
+
+  _refreshExitBar() {
+    if (!this.exitBar) return;
+    this.exitBar.classList.toggle('hidden', !this.exitDoor);
   }
 
   /** Rebuild the player model after an equipment change. */
@@ -224,6 +295,19 @@ export class Hub {
 
     /* ------------------------------------------------------------- npcs */
     for (const n of this.npcs) n.update(dt, this.t);
+    this.crowd?.update(dt);
+    this.exitBeacon?.userData.pulse?.(this.t);
+
+    /* -------------------------------------------------- guidance overlays
+       The compass points at whatever the current objective is; failing that,
+       at the way out, but only once the player has wandered away from it. */
+    const objAt = Objective.target;
+    if (!objAt && this.exitDoor) {
+      const d = Math.hypot(this.exitDoor.x - this.pos.x, this.exitDoor.z - this.pos.z);
+      if (d > 9) Objective.target = { x: this.exitDoor.x, z: this.exitDoor.z, label: 'Courtyard' };
+    }
+    Objective.updateCompass(this.camera, THREE);
+    if (!objAt) Objective.target = null;
 
     this.sky.update(dt, this.pos.x, this.pos.z);
 
@@ -232,7 +316,7 @@ export class Hub {
 
     /* ------------------------------------------------------- animations */
     for (const a of this.zone.animated || []) if (a.userData.update) a.userData.update(this.t);
-    this.lightPool.update(dt, this.t);
+    this.lightPool.update(dt, this.t, this.pos.x, this.pos.z);
     this.fx.update(dt);
 
     /* ------------------------------------------------- ambient flourishes */
@@ -342,24 +426,37 @@ export class Hub {
   _buildDock() {
     const el = document.createElement('div');
     el.className = 'dock';
+    // "Courtyard" is first and always present. It is hidden only while you
+    // are already standing in it — a player who is lost should find the way
+    // home in the same place every time, not have to remember a doorway.
     el.innerHTML = `
-      <div class="dockbtn" data-go="map"><span class="ic">🗺</span><span class="lb">War Map</span></div>
-      <div class="dockbtn" data-go="army"><span class="ic">🚩</span><span class="lb">Army</span></div>
-      <div class="dockbtn" data-go="equip"><span class="ic">🎖</span><span class="lb">Commander</span></div>
-      <div class="dockbtn" data-go="library"><span class="ic">🧙</span><span class="lb">Library</span></div>
-      <div class="dockbtn" data-go="forge"><span class="ic">🔨</span><span class="lb">Forge</span></div>
-      <div class="dockbtn" data-go="shop"><span class="ic">💰</span><span class="lb">Market</span></div>`;
+      <div class="dockbtn home" data-go="courtyard"><span class="ic">${ic('castle')}</span><span class="lb">Courtyard</span></div>
+      <div class="docksep"></div>
+      <div class="dockbtn" data-go="map"><span class="ic">${ic('map')}</span><span class="lb">War Map</span></div>
+      <div class="dockbtn" data-go="army"><span class="ic">${ic('banner')}</span><span class="lb">Army</span></div>
+      <div class="dockbtn" data-go="equip"><span class="ic">${ic('medal')}</span><span class="lb">Commander</span></div>
+      <div class="dockbtn" data-go="library"><span class="ic">${ic('mage')}</span><span class="lb">Library</span></div>
+      <div class="dockbtn" data-go="forge"><span class="ic">${ic('hammer')}</span><span class="lb">Forge</span></div>
+      <div class="dockbtn" data-go="shop"><span class="ic">${ic('purse')}</span><span class="lb">Market</span></div>`;
     document.getElementById('ui').appendChild(el);
     this.dock = el;
     el.addEventListener('click', e => {
       const go = e.target.closest('[data-go]')?.dataset.go;
       if (!go) return;
       audio.play('ui.click');
+      if (go === 'courtyard') { this.transitionTo('keep'); return; }
       this.onAction?.(go);
     });
   }
 
   _refreshDock() {
+    // hide the way home only while you are already home
+    const home = this.dock.querySelector('[data-go="courtyard"]');
+    const sep = this.dock.querySelector('.docksep');
+    const atHome = this.zoneId === 'keep';
+    if (home) home.classList.toggle('hidden', atHome);
+    if (sep) sep.classList.toggle('hidden', atHome);
+
     const acts = nextActions();
     const map = { upgrade: 'library', research: 'library', craft: 'forge', quest: 'army', deck: 'army' };
     const counts = {};
@@ -386,5 +483,6 @@ export class Hub {
     if (this.rig) { this.scene.remove(this.rig.root); this.rig.dispose(); }
     this.dock?.remove();
     this.prompt?.remove();
+    this.exitBar?.remove();
   }
 }

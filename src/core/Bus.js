@@ -82,6 +82,13 @@ export const EV = {
   SYNERGY_ACTIVE: 'battle:synergy',
   BOSS_PHASE: 'battle:boss-phase',
   COMMANDER_DOWN: 'battle:commander-down',
+  WAVE_START: 'battle:wave-start',
+  WAVE_CLEAR: 'battle:wave-clear',
+  UNIT_DEPLOYED: 'battle:unit-deployed',    // the PLAYER placed a card
+
+  // onboarding
+  TUTORIAL_STEP: 'tut:step',
+  TUTORIAL_DONE: 'tut:done',
 
   // world
   ZONE_ENTER: 'world:zone-enter',

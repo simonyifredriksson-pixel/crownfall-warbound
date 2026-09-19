@@ -15,6 +15,7 @@ import { RARITY, CFG } from '../core/Config.js';
 import { buildCommanderPortrait } from '../art/CommanderArt.js';
 import { audio } from '../core/Audio.js';
 import { esc, commas, clamp, TAU } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 let pickingSlot = null;
 
@@ -24,7 +25,7 @@ export const ScreenEquip = {
 
   build(el, args, ui) {
     const parts = ui.scaffold(el, {
-      icon: '🎖',
+      icon: ic('medal'),
       title: 'The Commander',
       blurb: 'Heavy stops more and slows you. Light keeps you alive by not being there. Weight is the honest cost.',
     });
@@ -108,7 +109,7 @@ function build(body, ui, screen) {
     for (const [k, v] of specials) {
       const row = document.createElement('div');
       row.className = 'sbrow';
-      row.innerHTML = `<span class="k">${k}</span><span class="v">${typeof v === 'number' ? (v < 1 && v > 0 ? Math.round(v * 100) + '%' : v) : '✓'}</span>`;
+      row.innerHTML = `<span class="k">${k}</span><span class="v">${typeof v === 'number' ? (v < 1 && v > 0 ? Math.round(v * 100) + '%' : v) : ic('check')}</span>`;
       list.appendChild(row);
     }
     colR.appendChild(list);
@@ -198,7 +199,7 @@ function openPicker(slot, ui) {
     <div class="h-rule"><h2>${SLOTS[slot].name}</h2></div>
     <div class="opts" style="max-height:52vh;overflow:auto">
       ${rows || '<div class="empty-note">Nothing you own fits this slot.</div>'}
-      ${cur ? '<div class="dopt" data-uid="none"><span>✖</span><span>Remove</span></div>' : ''}
+      ${cur ? `<div class="dopt" data-uid="none"><span>${ic('close')}</span><span>Remove</span></div>` : ''}
     </div>`, (el, close) => {
     el.addEventListener('click', e => {
       const t = e.target.closest('[data-uid]');
@@ -212,7 +213,7 @@ function openPicker(slot, ui) {
   });
 }
 
-const LBL = { might: '⚔', focus: '✨', vigor: '❤', armor: '🛡', haste: '⚡', weight: '⚖' };
+const LBL = { might: ic('swords'), focus: ic('spark'), vigor: ic('heart'), armor: ic('shield'), haste: ic('stamina'), weight: ic('scales') };
 
 /* ==========================================================================
    LIVE CHARACTER PREVIEW

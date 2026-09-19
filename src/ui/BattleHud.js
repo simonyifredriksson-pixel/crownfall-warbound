@@ -18,6 +18,7 @@ import { MATS } from '../art/Palette.js';
 import { paintPortrait } from './Thumbs.js';
 import { audio } from '../core/Audio.js';
 import { esc, formatTime, clamp, clamp01, formatNum } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 const _v = new THREE.Vector3();
 
@@ -41,7 +42,7 @@ export class BattleHud {
     this.el.innerHTML = `
       <div class="hud-top">
         <div class="hud-side you">
-          <div class="lbl"><span>⚑</span><span id="h-you-name">Your Banner</span></div>
+          <div class="lbl"><span>${ic('banner')}</span><span id="h-you-name">Your Banner</span></div>
           <div class="hud-bannerbar"><i id="h-you-bar" style="width:100%"></i></div>
         </div>
         <div class="hud-clock" id="h-clock">
@@ -49,7 +50,7 @@ export class BattleHud {
           <div class="s" id="h-phase">Battle</div>
         </div>
         <div class="hud-side foe">
-          <div class="lbl"><span id="h-foe-name">Enemy Banner</span><span>⚑</span></div>
+          <div class="lbl"><span id="h-foe-name">Enemy Banner</span><span>${ic('banner')}</span></div>
           <div class="hud-bannerbar"><i id="h-foe-bar" style="width:100%"></i></div>
         </div>
       </div>
@@ -261,10 +262,20 @@ export class BattleHud {
     this.$('h-you-bar').style.width = (b0.hp01 * 100).toFixed(1) + '%';
     this.$('h-foe-bar').style.width = (b1.hp01 * 100).toFixed(1) + '%';
 
-    /* clock */
+    /* clock.
+       In a wave battle the clock is meaningless — the fight ends when the
+       last wave is dead — so it shows the wave count instead. Showing a
+       countdown that does not end the battle is worse than showing nothing. */
     const left = Math.max(0, CFG.battle.duration - b.t);
-    this.$('h-time').textContent = formatTime(left);
-    this.$('h-clock').classList.toggle('warn', left < 30);
+    if (b.waveMode) {
+      this.$('h-time').textContent = `${b.waveNow || 0}/${b.waveTotal || b.director.total}`;
+      this.$('h-phase').textContent = 'Wave';
+      this.$('h-clock').classList.remove('warn');
+    } else {
+      this.$('h-time').textContent = formatTime(left);
+      this.$('h-phase').textContent = 'Battle';
+      this.$('h-clock').classList.toggle('warn', left < 30);
+    }
     if (b.state === 'countdown') {
       this.$('h-phase').textContent = 'Starting';
       this.$('h-time').textContent = Math.ceil(b.countdown);
@@ -381,7 +392,7 @@ export class BattleHud {
   setSynergies(list) {
     const host = this.$('h-syn');
     host.innerHTML = list.map(s =>
-      `<div class="syn"><span class="si">${s.def?.icon || '✦'}</span>
+      `<div class="syn"><span class="si">${s.def?.icon || ic('spark')}</span>
         <span>${esc(s.def?.name || s.id)}</span>
         <span class="sd">×${s.n}</span></div>`).join('');
   }
@@ -408,9 +419,35 @@ export class BattleHud {
     });
   }
 
+  /**
+   * One sentence of coaching, above the hand, for as long as it is useful.
+   *
+   * This is deliberately NOT `showTutorial`'s modal. A wave battle teaches
+   * while the fight is happening; a box that has to be dismissed would stop
+   * the thing it is trying to explain.
+   */
+  showTeach(text) {
+    if (!text) return;
+    if (!this._teach) {
+      this._teach = document.createElement('div');
+      this._teach.className = 'teachline';
+      this.el.appendChild(this._teach);
+    }
+    this._teach.innerHTML = `<span class="tl-ic">${ic('quest')}</span><span>${esc(text)}</span>`;
+    this._teach.classList.remove('out');
+    void this._teach.offsetWidth;
+    this._teach.classList.add('in');
+    clearTimeout(this._teachT);
+    this._teachT = setTimeout(() => {
+      this._teach?.classList.remove('in');
+      this._teach?.classList.add('out');
+    }, 8600);
+  }
+
   callout(big, small) { UI.callout(big, small); }
 
   destroy() {
+    clearTimeout(this._teachT);
     this.el.remove();
     for (const e of this.floaterEls) e.remove();
     this.floaterEls.length = 0;

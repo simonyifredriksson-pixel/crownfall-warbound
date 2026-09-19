@@ -1,3 +1,4 @@
+import { ic } from '../art/Icons.js';
 /* Synergies.js — why army composition matters.
 
    Three kinds, all in one table so the UI can explain them in one place:
@@ -21,7 +22,7 @@ export const SYNERGIES = {
   /* ======================================================== DECK SYNERGIES */
 
   shieldWall: {
-    id: 'shieldWall', name: 'Shield Wall', kind: 'deck', icon: '🛡',
+    id: 'shieldWall', name: 'Shield Wall', kind: 'deck', icon: ic('shield'),
     desc: 'Three or more shield-wall units: every one of them gains +6 armour and +12% health.',
     detail: 'A wall is a wall because it is continuous. Two spearmen are a gap.',
     check: (deck) => deck.filter(c => c.tags?.includes('shieldwall')).length >= 3,
@@ -29,7 +30,7 @@ export const SYNERGIES = {
   },
 
   arcaneConduit: {
-    id: 'arcaneConduit', name: 'Arcane Conduit', kind: 'deck', icon: '🔮',
+    id: 'arcaneConduit', name: 'Arcane Conduit', kind: 'deck', icon: ic('orb'),
     desc: 'Three or more casters: all ability cooldowns are 22% shorter.',
     detail: 'Mages resonate. It is mostly showing off, but it works.',
     check: (deck) => deck.filter(c => c.role === 'caster').length >= 3,
@@ -37,7 +38,7 @@ export const SYNERGIES = {
   },
 
   hordeDoctrine: {
-    id: 'hordeDoctrine', name: 'Horde Doctrine', kind: 'deck', icon: '🐜',
+    id: 'hordeDoctrine', name: 'Horde Doctrine', kind: 'deck', icon: ic('swarm'),
     desc: 'Four or more cards costing 3 or less: every one of them deploys with +1 body and +10% move speed.',
     detail: 'Cheap and many beats expensive and few — if you can actually reach them.',
     check: (deck) => deck.filter(c => c.cost <= 3).length >= 4,
@@ -45,7 +46,7 @@ export const SYNERGIES = {
   },
 
   siegeTrain: {
-    id: 'siegeTrain', name: 'Siege Train', kind: 'deck', icon: '🪨',
+    id: 'siegeTrain', name: 'Siege Train', kind: 'deck', icon: ic('rock'),
     desc: 'Two or more siege units: all of them gain +30% structure damage and +2m range.',
     detail: 'One engine is a target. Two engines are a plan.',
     check: (deck) => deck.filter(c => c.role === 'siege').length >= 2,
@@ -53,7 +54,7 @@ export const SYNERGIES = {
   },
 
   necroticTide: {
-    id: 'necroticTide', name: 'Necrotic Tide', kind: 'deck', icon: '⚰',
+    id: 'necroticTide', name: 'Necrotic Tide', kind: 'deck', icon: ic('coffin'),
     desc: 'Two or more summoners or undead lords: your slain units leave corpses that last twice as long.',
     detail: 'You do not lose soldiers. You bank them.',
     check: (deck) => deck.filter(c => c.tags?.includes('undeadlord') || c.role === 'summoner').length >= 2,
@@ -62,7 +63,7 @@ export const SYNERGIES = {
   },
 
   holyOrder: {
-    id: 'holyOrder', name: 'Holy Order', kind: 'deck', icon: '✨',
+    id: 'holyOrder', name: 'Holy Order', kind: 'deck', icon: ic('spark'),
     desc: 'Three or more holy units: all of them gain +18% damage and your healing is 25% stronger.',
     detail: 'In Hollowmere this is not a bonus, it is the entire strategy.',
     check: (deck) => deck.filter(c => c.tags?.includes('holy')).length >= 3,
@@ -70,7 +71,7 @@ export const SYNERGIES = {
   },
 
   fireAndOil: {
-    id: 'fireAndOil', name: 'Pitch and Flame', kind: 'deck', icon: '🔥',
+    id: 'fireAndOil', name: 'Pitch and Flame', kind: 'deck', icon: ic('flame'),
     desc: 'At least one oil unit and one fire unit: oil lasts 50% longer and fire units gain +15% damage.',
     detail: 'The single most efficient two-card interaction in the game, and it costs seven Command total.',
     check: (deck) => deck.some(c => c.tags?.includes('oil')) && deck.some(c => c.tags?.includes('fire')),
@@ -79,7 +80,7 @@ export const SYNERGIES = {
   },
 
   skyDominance: {
-    id: 'skyDominance', name: 'Sky Dominance', kind: 'deck', icon: '🪽',
+    id: 'skyDominance', name: 'Sky Dominance', kind: 'deck', icon: ic('wing'),
     desc: 'Two or more flyers: all flyers gain +15% move speed and take 20% less damage from ranged attacks.',
     detail: 'Two flyers split the enemy archers. One flyer just dies to them.',
     check: (deck) => deck.filter(c => c.role === 'flyer').length >= 2,
@@ -87,7 +88,7 @@ export const SYNERGIES = {
   },
 
   shadowPact: {
-    id: 'shadowPact', name: 'Shadow Pact', kind: 'deck', icon: '🌑',
+    id: 'shadowPact', name: 'Shadow Pact', kind: 'deck', icon: ic('void'),
     desc: 'Two or more assassins: stealth lasts 2s longer and backstabs deal an extra 25%.',
     detail: 'Two knives arriving at the same backline from two directions is not twice as good. It is much worse than that.',
     check: (deck) => deck.filter(c => c.role === 'assassin').length >= 2,
@@ -95,7 +96,7 @@ export const SYNERGIES = {
   },
 
   balancedArms: {
-    id: 'balancedArms', name: 'Combined Arms', kind: 'deck', icon: '⚖',
+    id: 'balancedArms', name: 'Combined Arms', kind: 'deck', icon: ic('scales'),
     desc: 'Four or more different damage types in the deck: every unit gains +8% damage. No enemy can armour against all of you.',
     detail: 'The answer to rotating wards, magical golems and every "immune to X" enemy in the game.',
     check: (deck) => new Set(deck.map(c => c.dmgType)).size >= 4,
@@ -103,7 +104,7 @@ export const SYNERGIES = {
   },
 
   fieldCommand: {
-    id: 'fieldCommand', name: 'Field Command', kind: 'deck', icon: '🚩',
+    id: 'fieldCommand', name: 'Field Command', kind: 'deck', icon: ic('banner'),
     desc: 'A banner unit plus a support unit: Command regenerates 12% faster all battle.',
     detail: 'Boring. Wins battles.',
     check: (deck) => deck.some(c => c.tags?.includes('banner')) && deck.some(c => c.role === 'support'),
@@ -114,7 +115,7 @@ export const SYNERGIES = {
   /* ======================================================= FIELD SYNERGIES */
 
   bulwarkGuard: {
-    id: 'bulwarkGuard', name: 'Bulwark', kind: 'field', icon: '🛡',
+    id: 'bulwarkGuard', name: 'Bulwark', kind: 'field', icon: ic('shield'),
     desc: 'A support unit within 8m of a guardian: the guardian takes 18% less damage.',
     detail: 'Position, not deckbuilding. Walk your priest up behind the wall and the wall stops dying.',
     field(b, u, allies) {
@@ -127,7 +128,7 @@ export const SYNERGIES = {
   },
 
   coveringFire: {
-    id: 'coveringFire', name: 'Covering Fire', kind: 'field', icon: '🏹',
+    id: 'coveringFire', name: 'Covering Fire', kind: 'field', icon: ic('bow'),
     desc: 'A ranged unit standing behind a guardian (within 7m): +22% damage.',
     detail: 'Archers shoot better when nothing is chewing on them. This is the Knight + Mage formation, formalised.',
     field(b, u, allies) {
@@ -141,7 +142,7 @@ export const SYNERGIES = {
   },
 
   focusedVolley: {
-    id: 'focusedVolley', name: 'Focused Volley', kind: 'field', icon: '🎯',
+    id: 'focusedVolley', name: 'Focused Volley', kind: 'field', icon: ic('target'),
     desc: 'Ranged units deal +30% damage to targets that are rooted, frozen or chilled.',
     detail: 'A Warden and four archers is a kill box.',
     field: null,   // implemented in the damage pipeline; listed here for the codex
@@ -149,7 +150,7 @@ export const SYNERGIES = {
   },
 
   siegebreaker: {
-    id: 'siegebreaker', name: 'Siegebreaker', kind: 'field', icon: '🏚',
+    id: 'siegebreaker', name: 'Siegebreaker', kind: 'field', icon: ic('ruin'),
     desc: 'A siege unit within 10m of a large melee unit (mass 4+): both gain +35% structure damage.',
     detail: 'The Giant opens the gate. The catapult walks through it.',
     field(b, u, allies) {
@@ -167,7 +168,7 @@ export const SYNERGIES = {
   },
 
   packBond: {
-    id: 'packBond', name: 'Pack Bond', kind: 'field', icon: '🐺',
+    id: 'packBond', name: 'Pack Bond', kind: 'field', icon: ic('wolf'),
     desc: 'Three or more beasts within 6m of each other: all of them gain +20% attack speed.',
     detail: 'Beasts are a mass-action card. Trickling them in one at a time wastes them.',
     field(b, u, allies) {
@@ -181,7 +182,7 @@ export const SYNERGIES = {
   },
 
   wardedAdvance: {
-    id: 'wardedAdvance', name: 'Warded Advance', kind: 'field', icon: '🚯',
+    id: 'wardedAdvance', name: 'Warded Advance', kind: 'field', icon: ic('ban'),
     desc: 'An antimagic unit within 7m of a heavy unit: the heavy unit takes 30% less arcane and shadow damage.',
     detail: 'The counter to enemy caster stacks, if you actually walk them together.',
     field(b, u, allies) {
@@ -194,7 +195,7 @@ export const SYNERGIES = {
   },
 
   rallyPoint: {
-    id: 'rallyPoint', name: 'Rally Point', kind: 'field', icon: '👑',
+    id: 'rallyPoint', name: 'Rally Point', kind: 'field', icon: ic('crown'),
     desc: 'Units within your commander\'s aura gain +6% damage. Standing with your troops matters.',
     detail: 'Your commander is not a spectator. Lead from the front and the whole line hits harder.',
     field: null,
@@ -204,37 +205,37 @@ export const SYNERGIES = {
   /* ============================================================== COMBOS */
 
   oilBurn: {
-    id: 'oilBurn', name: 'Oil + Fire', kind: 'combo', icon: '🔥',
+    id: 'oilBurn', name: 'Oil + Fire', kind: 'combo', icon: ic('flame'),
     desc: 'Oiled targets take 85% more fire damage.',
     detail: 'Oil Flinger → Firebomber is the cheapest hard-counter to a heavy push in the game.',
   },
 
   chillShatter: {
-    id: 'chillShatter', name: 'Chill → Shatter', kind: 'combo', icon: '🧊',
+    id: 'chillShatter', name: 'Chill → Shatter', kind: 'combo', icon: ic('frost'),
     desc: 'Four stacks of Chilled freeze a target, and frozen targets take 40% more damage from everything.',
     detail: 'Frost Mage sets it up; anything with a big single hit cashes it in.',
   },
 
   sunderCrush: {
-    id: 'sunderCrush', name: 'Sunder → Crush', kind: 'combo', icon: '🪓',
+    id: 'sunderCrush', name: 'Sunder → Crush', kind: 'combo', icon: ic('axe'),
     desc: 'Sundered strips 6 armour per stack. Blunt damage already does 50% extra to heavy armour; together they delete plate.',
     detail: 'Elemental Mastery\'s arcane cycle applies Sunder. Follow it with a Giant.',
   },
 
   markedVolley: {
-    id: 'markedVolley', name: 'Mark → Volley', kind: 'combo', icon: '🔻',
+    id: 'markedVolley', name: 'Mark → Volley', kind: 'combo', icon: ic('target'),
     desc: 'Marked targets take 25% more ranged damage. Ranger marks; everything else shoots.',
     detail: 'One Ranger meaningfully upgrades every archer you own.',
   },
 
   rootExecute: {
-    id: 'rootExecute', name: 'Root → Execute', kind: 'combo', icon: '🌿',
+    id: 'rootExecute', name: 'Root → Execute', kind: 'combo', icon: ic('leaf'),
     desc: 'Rooted enemies cannot retreat, and Execute doubles damage below 30% health.',
     detail: 'Warden plus Berserker means nothing wounded ever gets away.',
   },
 
   corpseFuel: {
-    id: 'corpseFuel', name: 'Corpses are Ammunition', kind: 'combo', icon: '💀',
+    id: 'corpseFuel', name: 'Corpses are Ammunition', kind: 'combo', icon: ic('skull'),
     desc: 'Necromancers raise the dead of both armies. Fire damage burns corpses away before they can be used.',
     detail: 'Against Morvant, a single fire unit is worth more than a good frontline.',
   },

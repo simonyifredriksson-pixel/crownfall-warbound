@@ -1,3 +1,4 @@
+import { ic } from '../art/Icons.js';
 /* Factions.js — the armies you fight, and how each one thinks.
 
    A faction is not a palette swap. Each has its own roster, its own deployment
@@ -8,7 +9,7 @@
 export const FACTIONS = {
 
   goblin: {
-    id: 'goblin', name: 'Goblin Warband', icon: '👺',
+    id: 'goblin', name: 'Goblin Warband', icon: ic('goblin'),
     color: '#6a8a3a', accent: '#d9a441',
     banner: 'ragged', terrain: 'forest',
     roster: ['goblinCutter', 'goblinArcher', 'goblinBomber', 'goblinShaman', 'goblinWolfRider'],
@@ -25,7 +26,7 @@ export const FACTIONS = {
   },
 
   bandit: {
-    id: 'bandit', name: 'Bandit Coalition', icon: '🗡',
+    id: 'bandit', name: 'Bandit Coalition', icon: ic('dagger'),
     color: '#8a4a2a', accent: '#c5362b',
     banner: 'black', terrain: 'fen',
     roster: ['banditCutthroat', 'banditCrossbow', 'banditBruiser', 'banditCutpurse'],
@@ -42,7 +43,7 @@ export const FACTIONS = {
   },
 
   orc: {
-    id: 'orc', name: 'Orc Horde', icon: '🪓',
+    id: 'orc', name: 'Orc Horde', icon: ic('axe'),
     color: '#5a7a4a', accent: '#c5362b',
     banner: 'bone', terrain: 'waste',
     roster: ['orcGrunt', 'orcBerserker', 'orcShaman', 'orcWarboar', 'orcSiegeThrower'],
@@ -59,7 +60,7 @@ export const FACTIONS = {
   },
 
   undead: {
-    id: 'undead', name: 'Undead Legion', icon: '💀',
+    id: 'undead', name: 'Undead Legion', icon: ic('skull'),
     color: '#6a6a5a', accent: '#79cfe0',
     banner: 'tattered', terrain: 'mere',
     roster: ['undeadRisen', 'undeadBoneArcher', 'undeadWraith', 'undeadPlagueCart', 'undeadBoneGiant'],
@@ -75,7 +76,7 @@ export const FACTIONS = {
   },
 
   conclave: {
-    id: 'conclave', name: 'Dark Conclave', icon: '🔮',
+    id: 'conclave', name: 'Dark Conclave', icon: ic('orb'),
     color: '#3a2a4a', accent: '#b07fd0',
     banner: 'sigil', terrain: 'spire',
     roster: ['conclaveAdept', 'conclaveWarden', 'conclaveSilencer', 'conclaveVoidling'],
@@ -92,7 +93,7 @@ export const FACTIONS = {
   },
 
   beast: {
-    id: 'beast', name: 'Beasts of the Wild', icon: '🐺',
+    id: 'beast', name: 'Beasts of the Wild', icon: ic('wolf'),
     color: '#4a4a52', accent: '#8fbf4a',
     banner: 'none', terrain: 'forest',
     roster: ['beastDireWolf', 'beastSpider', 'beastBehemoth', 'houndPack'],
@@ -108,7 +109,7 @@ export const FACTIONS = {
   },
 
   ancient: {
-    id: 'ancient', name: 'Ancient Guardians', icon: '🗿',
+    id: 'ancient', name: 'Ancient Guardians', icon: ic('statue'),
     color: '#7a7a68', accent: '#ffd479',
     banner: 'stone', terrain: 'ruin',
     roster: ['guardianSentinel', 'guardianSeeker', 'guardianColossus'],
@@ -126,7 +127,7 @@ export const FACTIONS = {
 
   /* The player's own side, for the codex and unit colouring. */
   crown: {
-    id: 'crown', name: 'Army of the Iron Crown', icon: '👑',
+    id: 'crown', name: 'Army of the Iron Crown', icon: ic('crown'),
     color: '#2f5f8f', accent: '#d9a441',
     banner: 'crown', terrain: 'keep',
     roster: [],

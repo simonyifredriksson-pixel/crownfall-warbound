@@ -36,6 +36,7 @@ import { Entity, Corpse } from './Entity.js';
 import { SpatialGrid } from './Spatial.js';
 import { Commander } from './Commander.js';
 import { EnemyDirector } from './EnemyAI.js';
+import { WaveDirector } from './WaveDirector.js';
 import { buildUnitModel } from '../art/UnitArt.js';
 import { buildCommanderModel, updateCommanderRig } from '../art/CommanderArt.js';
 import * as Props from '../art/PropArt.js';
@@ -130,8 +131,13 @@ export class Battle {
     }
     this._buildCommanderModels();
 
-    /* --------------------------------------------------------- enemy AI */
-    this.director = new EnemyDirector(this, o.enemy || {});
+    /* --------------------------------------------------------- enemy AI
+       A node that declares `waves` is a teaching battle: a scripted sequence
+       the player can be talked through. Everything else gets the real
+       opponent. Both satisfy the same interface. */
+    this.director = o.enemy?.waves?.length
+      ? new WaveDirector(this, { waves: o.enemy.waves, leadIn: o.enemy.waveLeadIn })
+      : new EnemyDirector(this, o.enemy || {});
 
     /* ------------------------------------------------------- deploy zone */
     this.deployZone = this.field.makeDeployZone(0);
@@ -767,6 +773,8 @@ export class Battle {
     if (team === 0) {
       const hi = this.hand.indexOf(cardIndex);
       if (hi >= 0) { this.hand.splice(hi, 1); this._drawCard(); this.nextCard = this._peekNext(); }
+      // the tutorial needs to know WHICH card the player just played
+      bus.emit(EV.UNIT_DEPLOYED, { cardId: unit.id, role: unit.role, x, z });
     }
     return true;
   }
@@ -983,8 +991,10 @@ export class Battle {
       }
     }
 
-    /* 10. timer / victory */
-    if (this.t >= CFG.battle.duration) this._suddenDeath();
+    /* 10. timer / victory
+       A wave battle has no clock: it is over when the last wave is dead.
+       Letting sudden death fire would end a teaching fight mid-lesson. */
+    if (!this.waveMode && this.t >= CFG.battle.duration) this._suddenDeath();
 
     /* 11. presentation */
     this._syncRigs(dt);
@@ -1596,6 +1606,37 @@ export class Battle {
     }
     c.update(this, dt, intent);
   }
+
+  /* -------------------------------------------------------------- waves
+     Called by WaveDirector. These are METHODS on Battle, never properties —
+     assigning `this.waveX = ...` with the same name as a method is the
+     shadowing bug that has bitten this file four times already. */
+
+  onWaveStart(n, total, wave) {
+    this.waveNow = n; this.waveTotal = total;
+    bus.emit(EV.WAVE_START, { n, total, wave });
+    this.opts.onEvent?.({
+      kind: 'callout',
+      big: `WAVE ${n} OF ${total}`,
+      small: wave?.name || '',
+    });
+    if (wave?.teach) this.opts.onEvent?.({ kind: 'teach', text: wave.teach });
+    this.sound('horn', 0, 0);
+  }
+
+  onWaveCleared(n, total, wave) {
+    bus.emit(EV.WAVE_CLEAR, { n, total, wave });
+    if (n < total) {
+      this.opts.onEvent?.({ kind: 'callout', big: 'WAVE CLEARED', small: `${total - n} to go` });
+      if (wave?.after) this.opts.onEvent?.({ kind: 'teach', text: wave.after });
+    }
+  }
+
+  /** Every wave beaten — that is the win condition for a teaching battle. */
+  winByWaves() { this._endBattle(true, 'waves'); }
+
+  /** True while a scripted wave battle is running. The HUD reads this. */
+  get waveMode() { return !!this.director?.isWaveMode; }
 
   /* ------------------------------------------------------------ endgame */
 

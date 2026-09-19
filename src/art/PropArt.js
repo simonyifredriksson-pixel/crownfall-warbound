@@ -758,6 +758,96 @@ export function torch(o = {}) {
   return grp;
 }
 
+/* ==========================================================================
+   THE WAY OUT
+
+   Every interior in the game uses the SAME exit. That is the point: once a
+   player has left the Library through one of these, they recognise the Forge's
+   from across the room without being told.
+
+   Four things carry the read, and all four are needed:
+     1. A doorway far wider and taller than any other opening in the room.
+     2. Daylight in it. Interiors are warm and dim; the exit is a cold bright
+        rectangle, which the eye goes to on its own.
+     3. The keep's blue-and-gold banner over the lintel, only ever used here.
+     4. A lit runner on the floor pointing at it.
+*/
+export function exitArch(o = {}) {
+  const w = o.width ?? 5.4;
+  const h = o.height ?? 5.2;
+  const stone = o.stone ?? PAL.stoneLight;
+  const g = new THREE.Group();
+
+  const jambW = 0.9;
+  g.add(meshOf([
+    // jambs, stepped so they catch the light
+    box(jambW, h, 1.2, { color: stone, x: -(w / 2 + jambW / 2), y: h / 2 }),
+    box(jambW, h, 1.2, { color: stone, x: (w / 2 + jambW / 2), y: h / 2 }),
+    box(jambW * 1.3, 0.5, 1.5, { color: shadeOf(stone, 1.1), x: -(w / 2 + jambW / 2), y: h - 0.25 }),
+    box(jambW * 1.3, 0.5, 1.5, { color: shadeOf(stone, 1.1), x: (w / 2 + jambW / 2), y: h - 0.25 }),
+    // lintel
+    box(w + jambW * 2.6, 0.8, 1.4, { color: shadeOf(stone, 1.06), y: h + 0.4 }),
+    box(w + jambW * 3.2, 0.34, 1.7, { color: shadeOf(stone, 1.18), y: h + 0.95 }),
+    // a shallow arch of voussoirs inside the opening
+    ...Array.from({ length: 9 }, (_, i) => {
+      const a = Math.PI * (0.08 + (i / 8) * 0.84);
+      return box(0.62, 0.42, 1.25, {
+        color: shadeOf(stone, 0.94 + (i % 2) * 0.12),
+        x: -Math.cos(a) * (w / 2 + 0.1), y: h - 0.3 + Math.sin(a) * 0.55,
+        rz: -(a - Math.PI / 2) * 0.6,
+      });
+    }),
+  ], MATS.body));
+
+  /* daylight. A bright, cold, untonemapped plane filling the opening —
+     unmistakable against a warm interior, and it costs one quad. */
+  const day = meshOf([plane(w, h - 0.3, { color: o.dayColor ?? 0xcfe2f2, y: (h - 0.3) / 2, z: -0.55, grad: 0 })],
+    MATS.glow, { castShadow: false });
+  day.renderOrder = -2;
+  g.add(day);
+  // a softer bloom lip just inside, so the edge is not a hard cut
+  const halo = meshOf([plane(w + 1.6, h + 1.0, { color: 0xbcd6ec, y: h / 2, z: -0.35, grad: 0 })],
+    MATS.additive, { castShadow: false });
+  halo.material = MATS.emissive(0xbcd6ec, 0.22);
+  halo.renderOrder = -1;
+  g.add(halo);
+
+  /* the keep's banner — used nowhere else, so it means exactly one thing */
+  const ban = meshOf([
+    banner(1.5, 2.3, { color: PAL.teamPlayer, phase: 0.6 }),
+  ], MATS.cloth, { castShadow: false });
+  ban.position.set(0, h - 0.4, 0.75);
+  g.add(ban);
+  g.add(meshOf([
+    box(1.7, 0.12, 0.12, { color: PAL.gold, y: h + 0.75, z: 0.75 }),
+    // a simple keep sigil: three merlons over a bar
+    box(0.9, 0.14, 0.05, { color: PAL.goldLight, y: h - 1.0, z: 0.80 }),
+    box(0.2, 0.3, 0.05, { color: PAL.goldLight, x: -0.32, y: h - 0.78, z: 0.80 }),
+    box(0.2, 0.3, 0.05, { color: PAL.goldLight, y: h - 0.78, z: 0.80 }),
+    box(0.2, 0.3, 0.05, { color: PAL.goldLight, x: 0.32, y: h - 0.78, z: 0.80 }),
+  ], MATS.body));
+
+  g.userData.update = (t) => { ban.rotation.z = Math.sin(t * 1.1) * 0.03; };
+  return g;
+}
+
+/** The lit runner that points at an exit. `len` runs along -Z from the door. */
+export function exitRunner(len = 12, o = {}) {
+  const w = o.width ?? 2.6;
+  const g = [];
+  const n = Math.max(3, Math.round(len / 2));
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    g.push(box(w * (0.7 + t * 0.3), 0.03, 1.1, {
+      color: shadeOf(o.color ?? 0x8a6a2a, 0.8 + t * 0.55),
+      y: 0.03, z: -len + t * len,
+    }));
+  }
+  const m = meshOf(g, MATS.terrain, { castShadow: false });
+  m.receiveShadow = true;
+  return m;
+}
+
 export function chest(o = {}) {
   const wood = o.color ?? 0x5a4530;
   return meshOf([

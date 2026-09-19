@@ -9,6 +9,7 @@ import { MATERIALS } from '../data/Materials.js';
 import { RARITY } from '../core/Config.js';
 import { audio } from '../core/Audio.js';
 import { esc, commas, formatNum } from '../core/Util.js';
+import { ic } from '../art/Icons.js';
 
 let tab = 'craft';
 let craftFilter = 'all';
@@ -20,13 +21,13 @@ export const ScreenForge = {
   build(el, args, ui) {
     if (args?.tab) tab = args.tab;
     const parts = ui.scaffold(el, {
-      icon: '🔨',
+      icon: ic('hammer'),
       title: 'The Forge',
       blurb: 'Dunnick Ore, third-generation Crown smith, and a fire that has not gone out in ninety years.',
       tabs: [
-        { id: 'craft', name: 'Forge', icon: '🔨' },
-        { id: 'upgrade', name: 'Temper', icon: '▲' },
-        { id: 'materials', name: 'Materials', icon: '📦' },
+        { id: 'craft', name: 'Forge', icon: ic('hammer') },
+        { id: 'upgrade', name: 'Temper', icon: ic('chevron') },
+        { id: 'materials', name: 'Materials', icon: ic('crate') },
       ],
       activeTab: ['craft', 'upgrade', 'materials'].indexOf(tab),
       onTab: id => { tab = id; ui.refresh(); },
@@ -135,7 +136,7 @@ function statChips(item) {
   return Object.entries(st).filter(([, v]) => v).map(([k, v]) =>
     `<span class="mat">${LBL[k] || k} ${k === 'weight' ? '' : '+'}${v}</span>`).join('');
 }
-const LBL = { might: '⚔', focus: '✨', vigor: '❤', armor: '🛡', haste: '⚡', weight: '⚖' };
+const LBL = { might: ic('swords'), focus: ic('spark'), vigor: ic('heart'), armor: ic('shield'), haste: ic('stamina'), weight: ic('scales') };
 
 function discount(cost) {
   const c = { ...cost };
@@ -223,7 +224,7 @@ function buildUpgrade(body, ui) {
       b.className = 'btn gold wide mt10' + (State.canAfford(cost) ? '' : ' dis');
       b.textContent = `Temper to +${it.level}`;
       b.onclick = () => {
-        if (State.upgradeItem(it.uid)) { audio.play('anvil'); UI.toast(`${def.name} tempered`, 'good', '▲'); ui.refresh(); }
+        if (State.upgradeItem(it.uid)) { audio.play('anvil'); UI.toast(`${def.name} tempered`, 'good', ic('chevron')); ui.refresh(); }
         else audio.play('ui.deny');
       };
       host.appendChild(b);

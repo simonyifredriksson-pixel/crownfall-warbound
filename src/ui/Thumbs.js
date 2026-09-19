@@ -15,6 +15,7 @@ import { buildCommanderPortrait } from '../art/CommanderArt.js';
 import { UNITS } from '../data/Units.js';
 import { RARITY_HEX } from '../art/Palette.js';
 import { tierOf } from '../data/Units.js';
+import { ic } from '../art/Icons.js';
 
 const W = 220, H = 290;
 
@@ -65,7 +66,7 @@ class ThumbFactory {
 
   /**
    * Returns a <canvas> containing the portrait, or null if WebGL is
-   * unavailable (callers fall back to an emoji glyph).
+   * unavailable (callers fall back to the unit's role glyph).
    */
   get(unitId, level = 1) {
     const unit = UNITS[unitId];
@@ -180,12 +181,14 @@ export function paintPortrait(container, unitId, level) {
     const u = UNITS[unitId];
     const span = document.createElement('div');
     span.className = 'glyph';
-    span.textContent = ROLE_GLYPH[u?.role] || '⚔';
+    // innerHTML, not textContent: a role glyph is vector markup now
+    span.innerHTML = ROLE_GLYPH[u?.role] || ic('swords');
     container.appendChild(span);
   }
 }
 
 export const ROLE_GLYPH = {
-  guardian: '🛡', melee: '⚔', ranged: '🏹', caster: '✨', support: '💚',
-  assassin: '🗡', siege: '🪨', summoner: '⚰', beast: '🐺', flyer: '🪽', cavalry: '🐎',
+  guardian: ic('shield'), melee: ic('swords'), ranged: ic('bow'), caster: ic('orb'), support: ic('heal'),
+  assassin: ic('dagger'), siege: ic('siege'), summoner: ic('coffin'), beast: ic('wolf'),
+  flyer: ic('wing'), cavalry: ic('horse'),
 };

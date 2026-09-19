@@ -210,49 +210,107 @@ const _c2 = new THREE.Color();
    POINT LIGHT POOL — torches, forge fire, magic
    ========================================================================== */
 
+/**
+ * A fixed set of real point lights, assigned each frame to the most important
+ * light SOURCES near the player.
+ *
+ * A zone declares as many sources as it wants — the Library alone has a desk
+ * lamp, an orrery, a cauldron, three artefact pedestals, six window bays,
+ * eight sconces, three chandeliers and a doorway full of daylight. A forward
+ * renderer cannot afford thirty live lights, and it does not need to: the
+ * player can only be near a handful at once.
+ *
+ * So the pool scores every source by `intensity / distance` (with `priority`
+ * as a thumb on the scale, for things like a doorway that must ALWAYS be lit)
+ * and hands the real lights to the winners. Sources drift in and out smoothly,
+ * so nothing visibly pops.
+ */
 export class LightPool {
-  constructor(scene, max = 10) {
+  constructor(scene, max = 12) {
     this.scene = scene;
     this.lights = [];
     for (let i = 0; i < max; i++) {
       const l = new THREE.PointLight(0xffaa55, 0, 14, 2);
       l.visible = false;
       scene.add(l);
-      this.lights.push({ light: l, used: false, flicker: 0, base: 0, phase: rng.range(0, TAU) });
+      this.lights.push({ light: l, src: null, phase: rng.range(0, TAU), fade: 0 });
     }
+    this.sources = [];
+    this._sortT = 0;
   }
 
-  /** Claim a light. Returns a handle or null when the pool is exhausted. */
-  claim(x, y, z, color, intensity, dist, flicker = 0) {
-    const h = this.lights.find(l => !l.used);
-    if (!h) return null;
-    h.used = true;
-    h.light.visible = true;
-    h.light.position.set(x, y, z);
-    h.light.color.setHex(color);
-    h.light.intensity = intensity;
-    h.base = intensity;
-    h.light.distance = dist;
-    h.flicker = flicker;
-    return h;
+  /** Replace every source. Called once per zone load. */
+  setSources(list) {
+    this.sources = (list || []).map(s => ({
+      x: s.x, y: s.y, z: s.z, color: s.color,
+      intensity: s.intensity, dist: s.dist, flicker: s.flicker || 0,
+      priority: s.priority ?? 1,
+    }));
+    this._assign(0, 0);
   }
 
-  release(h) {
-    if (!h) return;
-    h.used = false;
-    h.light.visible = false;
-    h.light.intensity = 0;
+  /** Back-compatible single add. */
+  claim(x, y, z, color, intensity, dist, flicker = 0, priority = 1) {
+    const s = { x, y, z, color, intensity, dist, flicker, priority };
+    this.sources.push(s);
+    return s;
   }
 
-  update(dt, t) {
+  releaseAll() {
+    this.sources.length = 0;
+    for (const h of this.lights) { h.src = null; h.fade = 0; h.light.visible = false; h.light.intensity = 0; }
+  }
+
+  _assign(px, pz) {
+    if (!this.sources.length) {
+      for (const h of this.lights) { h.src = null; }
+      return;
+    }
+    // score: bright things and near things win; priority lets a zone pin one
+    for (const s of this.sources) {
+      const d = Math.hypot(s.x - px, s.z - pz);
+      s._score = (s.intensity * s.priority) / (1 + d * 0.16);
+    }
+    const ranked = this.sources.slice().sort((a, b) => b._score - a._score);
+    const want = ranked.slice(0, this.lights.length);
+
+    // keep a light on the source it already has, so nothing swaps needlessly
+    const taken = new Set();
     for (const h of this.lights) {
-      if (!h.used || !h.flicker) continue;
-      const f = Math.sin(t * 9 + h.phase) * 0.5 + Math.sin(t * 23.3 + h.phase * 2) * 0.3 + Math.sin(t * 3.1) * 0.2;
-      h.light.intensity = h.base * (1 + f * h.flicker);
+      if (h.src && want.includes(h.src)) taken.add(h.src);
+      else h.src = null;
+    }
+    const free = want.filter(s => !taken.has(s));
+    for (const h of this.lights) {
+      if (h.src) continue;
+      h.src = free.shift() || null;
     }
   }
 
-  releaseAll() { for (const h of this.lights) this.release(h); }
+  update(dt, t, px = 0, pz = 0) {
+    // re-rank a few times a second; every frame is wasted work and can thrash
+    this._sortT -= dt;
+    if (this._sortT <= 0) { this._sortT = 0.35; this._assign(px, pz); }
+
+    for (const h of this.lights) {
+      const s = h.src;
+      // fade in and out rather than popping when the assignment changes
+      h.fade = Math.max(0, Math.min(1, h.fade + (s ? dt * 3.2 : -dt * 3.2)));
+      if (!s && h.fade <= 0) { h.light.visible = false; h.light.intensity = 0; continue; }
+      if (!s) { h.light.intensity = 0; continue; }
+
+      h.light.visible = true;
+      h.light.position.set(s.x, s.y, s.z);
+      h.light.color.setHex(s.color);
+      h.light.distance = s.dist;
+      let k = 1;
+      if (s.flicker) {
+        const f = Math.sin(t * 9 + h.phase) * 0.5 + Math.sin(t * 23.3 + h.phase * 2) * 0.3 + Math.sin(t * 3.1) * 0.2;
+        k = 1 + f * s.flicker;
+      }
+      h.light.intensity = s.intensity * k * h.fade;
+    }
+  }
 
   dispose() { for (const h of this.lights) this.scene.remove(h.light); this.lights.length = 0; }
 }

@@ -21,6 +21,7 @@ import { MATERIALS } from '../data/Materials.js';
 import { audio } from '../core/Audio.js';
 import { esc, commas, formatNum, clamp } from '../core/Util.js';
 import { Thumbs } from './Thumbs.js';
+import { ic } from '../art/Icons.js';
 
 let tab = 'upgrade';
 let selected = null;
@@ -35,17 +36,17 @@ export const ScreenLibrary = {
     const canAwaken = State.bonuses.awakeningUnlocked;
 
     const tabs = [
-      { id: 'upgrade', name: 'Card Study', icon: '🔷' },
-      { id: 'research', name: 'Research', icon: '📜' },
+      { id: 'upgrade', name: 'Card Study', icon: ic('crystal') },
+      { id: 'research', name: 'Research', icon: ic('scroll') },
     ];
-    if (canBrew) tabs.push({ id: 'alchemy', name: 'Brewing', icon: '🧪' });
-    if (canAwaken) tabs.push({ id: 'awaken', name: 'Awakening', icon: '🌟' });
-    tabs.push({ id: 'codex', name: 'Codex', icon: '📖' });
+    if (canBrew) tabs.push({ id: 'alchemy', name: 'Brewing', icon: ic('flask') });
+    if (canAwaken) tabs.push({ id: 'awaken', name: 'Awakening', icon: ic('star') });
+    tabs.push({ id: 'codex', name: 'Codex', icon: ic('book') });
 
     if (!tabs.some(t => t.id === tab)) tab = 'upgrade';
 
     const parts = ui.scaffold(el, {
-      icon: '🧙',
+      icon: ic('mage'),
       title: "The Wizard's Library",
       blurb: 'Four hundred and eleven years of notes, most of them relevant.',
       tabs, activeTab: tabs.findIndex(t => t.id === tab),
@@ -53,7 +54,7 @@ export const ScreenLibrary = {
     });
 
     const head = parts.head;
-    head.innerHTML = `<div class="kv"><span class="k">Scrolls</span><span class="v">📜 ${State.s.scroll}</span></div>`;
+    head.innerHTML = `<div class="kv"><span class="k">Scrolls</span><span class="v">${ic('scroll')} ${State.s.scroll}</span></div>`;
 
     if (tab === 'upgrade') buildUpgrade(parts.body, ui);
     else if (tab === 'research') buildResearch(parts.body, ui);
@@ -93,7 +94,7 @@ function buildUpgrade(body, ui) {
         if (State.upgradeCard(c.id)) { Thumbs.invalidate(c.id); n++; }
       }
       audio.play('upgrade');
-      UI.toast(`${n} card${n === 1 ? '' : 's'} upgraded`, 'good', '▲');
+      UI.toast(`${n} card${n === 1 ? '' : 's'} upgraded`, 'good', ic('chevron'));
       ui.refresh();
     };
     left.appendChild(btn);
@@ -169,7 +170,7 @@ function buildResearch(body, ui) {
           ev.stopPropagation();
           if (State.doResearch(n.id)) {
             audio.play('upgrade');
-            UI.toast(n.wizardLine || n.name, 'good', '🧙');
+            UI.toast(n.wizardLine || n.name, 'good', ic('mage'));
             ui.refresh();
           } else audio.play('ui.deny');
         };
@@ -280,7 +281,7 @@ function pickPotion(slot, ui) {
   UI.overlay(`
     <div class="h-rule"><h2>Slot ${slot + 1}</h2></div>
     <div class="opts">${opts || '<div class="empty-note">Nothing brewed yet.</div>'}
-      <div class="dopt" data-p=""><span>✖</span><span>Leave empty</span></div>
+      <div class="dopt" data-p=""><span>${ic('close')}</span><span>Leave empty</span></div>
     </div>`, (el, close) => {
     el.addEventListener('click', e => {
       const p = e.target.closest('[data-p]');
@@ -330,7 +331,7 @@ function buildAwaken(body, ui) {
     el.className = 'recipe';
     el.style.setProperty('--rc', RARITY[u.rarity].color);
     el.innerHTML = `
-      <div class="ric">${awakenAb?.icon || '🌟'}</div>
+      <div class="ric">${awakenAb?.icon || ic('star')}</div>
       <div>
         <div class="rn">${esc(u.name)}${c.save.awakened ? ' <span class="chip on">Awakened</span>' : ''}</div>
         <div class="rd">${awakenAb ? `<b>${esc(awakenAb.name)}</b> — ${awakenAb.desc({ statMult: 1, mods: {} })}` : 'No awakening ability.'}</div>
@@ -344,7 +345,7 @@ function buildAwaken(body, ui) {
       b.onclick = () => {
         if (State.awakenCard(c.id)) {
           audio.play('levelup');
-          UI.toast(`${u.name} awakened`, 'legend', '🌟');
+          UI.toast(`${u.name} awakened`, 'legend', ic('star'));
           Thumbs.invalidate(c.id);
           ui.refresh();
         } else audio.play('ui.deny');

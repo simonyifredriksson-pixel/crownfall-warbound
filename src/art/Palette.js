@@ -68,18 +68,31 @@ export const ATMOS = {
     sun: 0xc0a8e0, sunI: 0.85, amb: 0x54486e, ambI: 0.66,
     ground: 0x565068, accent: PAL.arcane, sunAngle: [0.7, 4.1],
   },
-  // Interiors are lit almost entirely by ambience plus point lights, so the
-  // ambient term carries the room. Set too low it reads as a black box —
-  // atmospheric is not the same thing as unreadable.
+  /* Interiors.
+
+     These carry a whole room on the ambient term plus a handful of point
+     lights, and getting them wrong is what made the Library and the Forge
+     unplayable. Two rules learned the hard way:
+
+       1. `ambI` is a FLOOR, not a mood. Below about 1.4 the flat-shaded
+          undersides of shelves and anvils go to solid black and the room
+          reads as a hole. Atmosphere comes from the COLOUR difference
+          between ambient and key light, not from making everything dark.
+       2. Fog indoors must be far enough back to reach the far wall. At
+          fogFar 56 the end of the Forge was fog, not wall.
+
+     Each interior is deliberately two-temperature: a cool ambient with a warm
+     key (Forge) or a warm ambient with a cool key (Library). That contrast is
+     what makes a room look lit rather than tinted. */
   library: {
-    sky: [0x3a3350, 0x272138, 0x161225], fog: 0x2e2844, fogNear: 14, fogFar: 70,
-    sun: 0xffe0b0, sunI: 0.85, amb: 0x8878b0, ambI: 1.15,
-    ground: 0x4a3d30, accent: PAL.arcane, sunAngle: [1.0, 2.0], indoor: true,
+    sky: [0x4c4470, 0x332b4c, 0x1e1932], fog: 0x3b3358, fogNear: 26, fogFar: 96,
+    sun: 0xdfe8ff, sunI: 1.05, amb: 0xa294cc, ambI: 1.62,
+    ground: 0x5a4a38, accent: PAL.arcane, sunAngle: [1.0, 2.0], indoor: true,
   },
   forge: {
-    sky: [0x4a3630, 0x30211c, 0x1a1210], fog: 0x3e2c22, fogNear: 12, fogFar: 56,
-    sun: 0xffc088, sunI: 0.75, amb: 0x9a5a3c, ambI: 1.1,
-    ground: 0x433e38, accent: PAL.ember, sunAngle: [1.0, 1.2], indoor: true,
+    sky: [0x5d4640, 0x3c2a24, 0x241a16], fog: 0x4e3a2e, fogNear: 22, fogFar: 78,
+    sun: 0xffd2a0, sunI: 0.95, amb: 0x8a6a56, ambI: 1.55,
+    ground: 0x51493f, accent: PAL.ember, sunAngle: [1.0, 1.2], indoor: true,
   },
 };
 

@@ -35,6 +35,8 @@ import { ScreenShop } from './ui/ScreenShop.js';
 
 import { Hub } from './world/Hub.js';
 import { closeDialogue, dialogueOpen } from './world/NPCs.js';
+import { Tutorial } from './game/Tutorial.js';
+import { Objective } from './ui/Objective.js';
 
 import { Battle } from './battle/Battle.js';
 import { wireQuests, processBattleResult } from './game/Progression.js';
@@ -67,13 +69,14 @@ class Game {
     await step(24, 'READING THE SAVE');
     State.init();
     wireQuests();
+    Tutorial.init();
 
     await step(40, 'LIGHTING THE SKY');
     this.sky = new SkyRig(this.scene);
     this.fx = new FXSystem(this.scene);
-    // 12 slots: the Library alone wants a desk lamp, an orrery, a cauldron,
-    // three artefact pedestals and six sconces
-    this.lights = new LightPool(this.scene, 12);
+    // 14 real lights, assigned each frame to the nearest/brightest of however
+    // many sources a zone declares. The Library declares about thirty.
+    this.lights = new LightPool(this.scene, 14);
 
     await step(58, 'BUILDING THE INTERFACE');
     UI.init();
@@ -301,20 +304,40 @@ class Game {
     else this.hub.transitionTo(zone);
   }
 
+  /**
+   * The first thing a new player sees. It covers the CONTROLS only — the two
+   * things they cannot discover by trying, and nothing else. Every question
+   * about what the game is, what a card does, or where to go next is answered
+   * by the Marshal, in the world, at the moment it matters.
+   *
+   * The old version of this screen tried to explain the whole game in one
+   * box and then dropped the player into a courtyard with no objective.
+   */
   _firstRun() {
     State.setFlag('firstRun', false);
     UI.overlay(`
-      <div class="h-rule"><h2>Commander</h2></div>
-      <div style="font-size:15px;line-height:1.75;color:var(--vel-1)">
-        The Greenmarch is gone, the Crown is in pieces, and you have three cards and a borrowed sword.<br><br>
-        <b>Click anywhere</b> to take camera control — then just move the mouse to look around, exactly as you would expect.
-        <b>Esc</b> hands the mouse back whenever you need it.<br><br>
-        <b>WASD</b> walks relative to the camera, <b>Shift</b> runs, <b>E</b> interacts. The war table in the middle of the courtyard opens the campaign.<br><br>
-        In battle: <b>1–4</b> picks a card, then click to drop it on the marker. <b>WASD</b> moves you — you are a unit on that field, not a spectator.
-        <b>Space</b> dodges, <b>Q/E/R</b> are your abilities, <b>Tab</b> swaps between the overhead and over-the-shoulder view.
+      <div class="h-rule"><h2>Crownfall</h2></div>
+      <div style="font-size:15px;line-height:1.8;color:var(--vel-1)">
+        The Greenmarch is gone, the Crown is in pieces, and you have three cards and a borrowed sword.
+        <div class="firstkeys mt16">
+          <div><span class="kbd">Click</span> take camera control — then just move the mouse<br><span class="muted">Esc gives the mouse back whenever you need it</span></div>
+          <div><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> walk &nbsp; <span class="kbd">Shift</span> run &nbsp; <span class="kbd">E</span> interact</div>
+        </div>
+        <div class="mt16 muted" style="font-style:italic">Marshal Corr is at the war table. She will take it from there.</div>
       </div>
-      <div class="rowflex mt16" style="justify-content:flex-end"><div class="btn gold lg" data-ok>Take command</div></div>
-    `, (el, close) => { el.querySelector('[data-ok]').onclick = () => { audio.init(); audio.play('horn'); close(); }; });
+      <div class="rowflex mt16" style="justify-content:space-between;align-items:center">
+        <div class="btn ghost sm" data-skip>Skip the tutorial</div>
+        <div class="btn gold lg" data-ok>Take command</div>
+      </div>
+    `, (el, close) => {
+      el.querySelector('[data-ok]').onclick = () => { audio.init(); audio.play('horn'); close(); };
+      el.querySelector('[data-skip]').onclick = () => {
+        audio.init();
+        UI.confirm('Skip the tutorial?',
+          'You can ask Marshal Corr to explain any of it at the war table, at any time.',
+          () => { Tutorial.skip(); close(); }, 'Skip');
+      };
+    });
   }
 
   /* ====================================================================== */
@@ -364,6 +387,9 @@ class Game {
       enemy = {
         faction: node.faction, deck: node.enemyDeck || [], level: node.level || 1,
         boss: node.boss, modifiers: node.modifiers || [],
+        // A node with `waves` is a teaching battle: Battle swaps the free-form
+        // enemy director for the scripted one.
+        waves: node.waves, waveLeadIn: node.waveLeadIn,
         commanderStats: node.type === 'boss' ? null : null,
       };
       field = node.field || 'open';
@@ -423,12 +449,20 @@ class Game {
 
     audio.setMusic(node?.type === 'boss' ? 'boss' : 'battle');
 
+    // the objective tracker follows you into the fight
+    if (Tutorial.active) Tutorial.refresh();
+
+    bus.emit(EV.BATTLE_START, {
+      nodeId: node?.id || null, regionId: region?.id || null,
+      training: !!training, endless: endless || 0,
+    });
+
     // teach the node's lesson before the fight, not after
     if (node?.tutorial) setTimeout(() => this.hud.showTutorial(node.tutorial), 900);
   }
 
   startTraining() {
-    if (!State.deckValid()) { UI.toast(`Your army needs ${CFG.battle.deckSize} cards`, 'bad'); return; }
+    if (!State.deckValid()) { UI.toast(`Your army needs at least ${CFG.army.minDeck} cards`, 'bad'); return; }
     this.startBattle({ training: true, region: { id: 'greenmarch', name: 'Training Ground' } });
   }
 
@@ -436,6 +470,7 @@ class Game {
     if (!this.hud) return;
     if (e.kind === 'log') this.hud.pushLog(e.text, e.team);
     else if (e.kind === 'callout') this.hud.callout(e.big, e.small);
+    else if (e.kind === 'teach') this.hud.showTeach(e.text);
     else if (e.kind === 'synergies') this.hud.setSynergies(e.list);
     else if (e.kind === 'end') this._endBattle(e.result);
   }
@@ -588,6 +623,8 @@ class Game {
       }
 
       UI.update(dt);
+      // the Marshal waits for a quiet moment rather than interrupting
+      Tutorial.update(dt, { uiOpen: UI.isOpen, delay: this.mode === 'battle' ? 2.4 : 0.9 });
       State.tick(dt);
       this.post.update(dt);
       this.post.render(this.scene, this.camera);

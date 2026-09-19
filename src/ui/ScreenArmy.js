@@ -17,6 +17,7 @@ import { QUEST_LIST, QUESTS } from '../data/Quests.js';
 import { audio } from '../core/Audio.js';
 import { esc, commas, formatNum, clamp } from '../core/Util.js';
 import { Thumbs } from './Thumbs.js';
+import { ic } from '../art/Icons.js';
 
 let tab = 'deck';
 let filter = 'all';
@@ -29,13 +30,13 @@ export const ScreenArmy = {
   build(el, args, ui) {
     if (args?.tab) tab = args.tab;
     const parts = ui.scaffold(el, {
-      icon: '🚩',
+      icon: ic('banner'),
       title: 'The Army',
       blurb: 'Eight cards go to war. Choose them like you mean it.',
       tabs: [
-        { id: 'deck', name: 'Army', icon: '🚩' },
-        { id: 'collection', name: 'Collection', icon: '🃏' },
-        { id: 'challenges', name: 'Challenges', icon: '🎖' },
+        { id: 'deck', name: 'Army', icon: ic('banner') },
+        { id: 'collection', name: 'Collection', icon: ic('cards') },
+        { id: 'challenges', name: 'Challenges', icon: ic('medal') },
       ],
       activeTab: ['deck', 'collection', 'challenges'].indexOf(tab),
       onTab: (id) => { tab = id; ui.refresh(); },
@@ -61,13 +62,21 @@ function buildDeck(body, ui) {
   const right = document.createElement('div');
   wrap.append(left, right);
 
-  /* ------------------------------------------------------- deck slots */
-  left.appendChild(section('Your Army', `${s.deck.length} of ${CFG.battle.deckSize} slots filled. Click a slot to remove it, then pick a replacement below.`));
+  /* ------------------------------------------------------- deck slots
+     Capacity grows with the campaign, so the header explains the number
+     rather than presenting it as an arbitrary requirement. */
+  const cap = State.deckCapacity();
+  const inN = State.nextSlotIn();
+  left.appendChild(section('Your Army',
+    `${s.deck.length} of ${cap} slots filled — you may march with as few as ${CFG.army.minDeck}. ` +
+    (inN === null
+      ? 'This is the largest army you can command.'
+      : `Win ${inN} more battle${inN > 1 ? 's' : ''} to earn another slot.`)));
 
   const slots = document.createElement('div');
   slots.className = 'rowflex gap6 mb10';
   slots.style.flexWrap = 'wrap';
-  for (let i = 0; i < CFG.battle.deckSize; i++) {
+  for (let i = 0; i < cap; i++) {
     const id = s.deck[i];
     if (id) {
       slots.appendChild(miniCardEl(id, s.cards[id]?.level || 1, (uid) => {
@@ -160,7 +169,7 @@ function buildDeck(body, ui) {
     bench.appendChild(cardEl({
       unitId: c.id, level: c.save.level, shards: c.save.shards,
       onClick: (id) => {
-        if (s.deck.length >= CFG.battle.deckSize) { UI.toast('Your army is full — remove a card first', 'bad'); audio.play('ui.deny'); return; }
+        if (s.deck.length >= State.deckCapacity()) { UI.toast('Your army is full — remove a card first', 'bad'); audio.play('ui.deny'); return; }
         State.setDeck([...s.deck, id]);
         audio.play('ui.click');
         ui.refresh();
@@ -190,7 +199,7 @@ function gapAdvice(units) {
   const types = new Set(units.map(u => u.dmgType));
   if (types.size < 3) gaps.push('only <b>' + types.size + ' damage type' + (types.size === 1 ? '' : 's') + '</b> — some enemies armour against exactly that');
 
-  if (!gaps.length) return '<div class="chip on" style="font-size:12.5px">✓ No obvious gaps — this is a complete army.</div>';
+  if (!gaps.length) return `<div class="chip on" style="font-size:12.5px">${ic('check')} No obvious gaps — this is a complete army.</div>`;
   return `<div class="sub" style="font-style:normal"><b style="color:var(--blood-hi)">Gaps:</b> ${gaps.join(' · ')}</div>`;
 }
 
@@ -219,7 +228,7 @@ function buildCollection(body, ui) {
   const chips = [
     { id: 'all', name: 'All', on: filter === 'all' },
     { id: 'owned', name: 'Owned', on: filter === 'owned' },
-    { id: 'upgradable', name: 'Ready', icon: '▲', on: filter === 'upgradable' },
+    { id: 'upgradable', name: 'Ready', icon: ic('chevron'), on: filter === 'upgradable' },
     ...RARITY_ORDER.map(r => ({ id: r, name: RARITY[r].name, on: filter === r })),
     ...Object.keys(ROLE_INFO).map(r => ({ id: 'role:' + r, name: ROLE_INFO[r].name, icon: ROLE_INFO[r].icon, on: filter === 'role:' + r })),
   ];
@@ -323,12 +332,12 @@ function buildChallenges(body, ui) {
 
 function rewardList(r) {
   const out = [];
-  if (r.gold) out.push(`<span class="mat">🪙 ${formatNum(r.gold)}</span>`);
-  if (r.xp) out.push(`<span class="mat">✦ ${formatNum(r.xp)} xp</span>`);
-  if (r.scroll) out.push(`<span class="mat">📜 ${r.scroll}</span>`);
-  if (r.warSeal) out.push(`<span class="mat">🎖 ${r.warSeal}</span>`);
+  if (r.gold) out.push(`<span class="mat">${ic('coin')} ${formatNum(r.gold)}</span>`);
+  if (r.xp) out.push(`<span class="mat">${ic('spark')} ${formatNum(r.xp)} xp</span>`);
+  if (r.scroll) out.push(`<span class="mat">${ic('scroll')} ${r.scroll}</span>`);
+  if (r.warSeal) out.push(`<span class="mat">${ic('medal')} ${r.warSeal}</span>`);
   for (const k in (r.mats || {})) out.push(`<span class="mat">${k} ×${r.mats[k]}</span>`);
-  for (const k in (typeof r.shards === 'object' ? r.shards : {})) out.push(`<span class="mat">🔷 ${UNITS[k]?.name || k} ×${r.shards[k]}</span>`);
-  for (const c of (r.cards || [])) out.push(`<span class="mat">🃏 ${UNITS[c]?.name || c}</span>`);
+  for (const k in (typeof r.shards === 'object' ? r.shards : {})) out.push(`<span class="mat">${ic('crystal')} ${UNITS[k]?.name || k} ×${r.shards[k]}</span>`);
+  for (const c of (r.cards || [])) out.push(`<span class="mat">${ic('cards')} ${UNITS[c]?.name || c}</span>`);
   return out.join('');
 }
