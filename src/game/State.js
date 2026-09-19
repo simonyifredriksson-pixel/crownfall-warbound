@@ -66,7 +66,7 @@ export function newProfile() {
     settings: {
       master: 0.7, sfx: 0.85, music: 0.4,
       bloom: true, shadows: true, damageNumbers: true, cameraShake: true, tutorialHints: true,
-      lookSensitivity: 1.0, invertY: false,
+      lookSensitivity: 1.0, invertY: false, brightness: 1.0,
     },
     endless: { best: 0 },
   };

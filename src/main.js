@@ -152,6 +152,7 @@ class Game {
     audio.setVolume('music', s.music);
     this._applySetting('bloom', s.bloom);
     this._applySetting('shadows', s.shadows);
+    this._applySetting('brightness', s.brightness ?? 1);
     this._applySetting('lookSensitivity', s.lookSensitivity ?? 1);
     this._applySetting('invertY', s.invertY ?? false);
     this._applySetting('cameraShake', s.cameraShake !== false);
@@ -163,6 +164,7 @@ class Game {
       this.renderer.shadowMap.enabled = !!v;
       this.scene.traverse(o => { if (o.isMesh) o.material && (o.material.needsUpdate = true); });
     }
+    if (k === 'brightness') this.post.exposure = CFG.render.exposure * v;
     if (k === 'lookSensitivity') this.cam.sensitivity = v;
     if (k === 'invertY') this.cam.invertY = !!v;
     if (k === 'cameraShake') this.cam.shakeEnabled = !!v;

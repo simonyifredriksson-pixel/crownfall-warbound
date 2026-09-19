@@ -65,6 +65,19 @@ vec3 aces(vec3 x){
   return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
+/* Linear -> sRGB.
+   three.js applies this automatically for its own materials, but NOT for a raw
+   ShaderMaterial drawing to the default framebuffer. Without it every value
+   this pass writes is displayed about a gamma too dark: linear 0.5 shows as
+   sRGB 0.5 when it should show as 0.73. That made the whole game — and
+   interiors like the Library especially — look nearly black. */
+vec3 linearToSRGB(vec3 c){
+  c = clamp(c, 0.0, 1.0);
+  return mix(c * 12.92,
+             1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055,
+             step(vec3(0.0031308), c));
+}
+
 void main(){
   vec3 col = texture2D(tScene, vUv).rgb;
   vec3 bloom = texture2D(tBloomA, vUv).rgb * 0.62 + texture2D(tBloomB, vUv).rgb * 0.38;
@@ -73,15 +86,16 @@ void main(){
   col *= exposure;
   col = aces(col);
 
-  // vignette: darken and very slightly desaturate the corners so the centre
-  // of the frame always reads first
+  // vignette: a gentle fall-off so the centre reads first. Kept subtle — it
+  // was doing a third of the darkening on its own.
   vec2 d = vUv - 0.5;
   float v = 1.0 - dot(d, d) * vignette;
   float grey = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(vec3(grey), col, mix(0.82, 1.0, v));
-  col *= mix(0.62, 1.0, clamp(v, 0.0, 1.0));
+  col = mix(vec3(grey), col, mix(0.92, 1.0, v));
+  col *= mix(0.82, 1.0, clamp(v, 0.0, 1.0));
 
   col = mix(col, flashColor, flash);
+  col = linearToSRGB(col);
 
   gl_FragColor = vec4(col, 1.0);
 }`;
@@ -107,8 +121,13 @@ export class PostFX {
     });
     this._mk = mk;
 
-    this.rtScene = mk(2, 2);
-    this.rtScene.depthBuffer = true;
+    // The scene target needs a real depth buffer, requested at construction —
+    // the blur targets do not. Everything here stays in LINEAR space; the
+    // composite pass is the single place that encodes to sRGB for display.
+    this.rtScene = new THREE.WebGLRenderTarget(2, 2, {
+      minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat, type, depthBuffer: true, stencilBuffer: false,
+    });
     this.rtScene.texture.colorSpace = THREE.LinearSRGBColorSpace;
     this.rtA = mk(2, 2);
     this.rtB = mk(2, 2);

@@ -103,11 +103,31 @@ export class Hub {
     }
     const sp = opts.spawn || z.spawn;
     this.pos.x = sp.x; this.pos.z = sp.z;
-    this.facing = opts.facing ?? Math.PI / 2;
+
+    // Face INTO the room. Spawns sit just inside a door, so a fixed facing
+    // pointed half of them at the back wall — and with the camera behind you
+    // the boom then collapses into a close-up of your own head.
+    if (opts.facing !== undefined) {
+      this.facing = opts.facing;
+    } else {
+      const b = z.bounds;
+      const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2;
+      const dx = cx - sp.x, dz = cz - sp.z;
+      this.facing = (Math.abs(dx) + Math.abs(dz) > 0.5)
+        ? Math.atan2(dz, dx)
+        : Math.PI / 2;
+    }
 
     // Aim the camera along the character's facing. `facingYaw` and the rig's
     // own yaw use the same convention, so this is a straight conversion.
-    this.cam.setBounds(z.bounds);
+    // The camera gets MORE room than the character. `z.bounds` is the walkable
+    // area, already inset a couple of metres from the actual walls; using it
+    // directly for the boom squashed the camera into the back of your head.
+    const cb = z.camMargin ?? 1.9;
+    this.cam.setBounds({
+      x0: z.bounds.x0 - cb, x1: z.bounds.x1 + cb,
+      z0: z.bounds.z0 - cb, z1: z.bounds.z1 + cb,
+    });
     this.cam.setProbe(null);        // hub zones are flat
     this.cam.setBlockers(null);
     this.cam.reset({

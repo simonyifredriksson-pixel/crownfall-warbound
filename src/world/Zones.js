@@ -364,7 +364,8 @@ export function buildLibrary() {
   return {
     id: 'library', name: "The Wizard's Library", sub: 'Mind the third step. It is older than the building.',
     atmos: 'library', group, animated, lights,
-    spawn: { x: 0, z: 15 },
+    // stand a few metres in from the door, so the camera boom has room behind
+    spawn: { x: 0, z: 11.5 },
     bounds: { x0: -W / 2 + 2, x1: W / 2 - 2, z0: -D / 2 + 2.5, z1: D / 2 - 2.5 },
     doors: [{ x: 0, z: 17.5, to: 'keep', label: 'Courtyard', icon: '🏰' }],
     interactables: [
@@ -440,7 +441,7 @@ export function buildForge() {
   return {
     id: 'forge', name: 'The Forge', sub: 'A fire that has not gone out in ninety years',
     atmos: 'forge', group, animated, lights,
-    spawn: { x: 0, z: 9 },
+    spawn: { x: 0, z: 6.5 },
     bounds: { x0: -W / 2 + 2, x1: W / 2 - 2, z0: -D / 2 + 2.5, z1: D / 2 - 2.5 },
     doors: [{ x: 0, z: 11.5, to: 'keep', label: 'Courtyard', icon: '🏰' }],
     interactables: [

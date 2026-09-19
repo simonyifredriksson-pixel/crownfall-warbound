@@ -351,6 +351,7 @@ class UISystem {
       <div class="optrow"><span class="k">Master volume</span><input type="range" id="o-master" min="0" max="100" value="${s.master * 100}"></div>
       <div class="optrow"><span class="k">Effects</span><input type="range" id="o-sfx" min="0" max="100" value="${s.sfx * 100}"></div>
       <div class="optrow"><span class="k">Music</span><input type="range" id="o-music" min="0" max="100" value="${s.music * 100}"></div>
+      <div class="optrow"><span class="k">Brightness</span><input type="range" id="o-bright" min="50" max="200" value="${Math.round((s.brightness ?? 1) * 100)}"></div>
       <div class="optrow"><span class="k">Look sensitivity</span><input type="range" id="o-sens" min="20" max="250" value="${Math.round((s.lookSensitivity ?? 1) * 100)}"></div>
       <div class="optrow"><span class="k">Invert vertical look</span><div class="toggle${s.invertY ? ' on' : ''}" id="o-inv"></div></div>
       <div class="optrow"><span class="k">Bloom</span><div class="toggle${s.bloom ? ' on' : ''}" id="o-bloom"></div></div>
@@ -373,6 +374,11 @@ class UISystem {
       slide('#o-master', 'master', v => audio.setVolume('master', v));
       slide('#o-sfx', 'sfx', v => audio.setVolume('sfx', v));
       slide('#o-music', 'music', v => audio.setVolume('music', v));
+      el.querySelector('#o-bright').addEventListener('input', e => {
+        const v = Math.max(0.5, e.target.value / 100);
+        State.setSetting('brightness', v);
+        this.onSetting?.('brightness', v);
+      });
       el.querySelector('#o-sens').addEventListener('input', e => {
         const v = Math.max(0.2, e.target.value / 100);
         State.setSetting('lookSensitivity', v);
