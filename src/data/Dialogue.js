@@ -247,11 +247,32 @@ export const DRILL_TREE = {
   root: {
     text: 'Commander. Ground\'s free if you want to work.',
     opts: [
+      { label: 'Drill the army in a formation.', to: null, action: 'drill' },
       { label: 'Run a practice battle.', to: null, action: 'openTraining' },
+      { label: 'How do I actually command them?', to: 'orders' },
       { label: 'Explain the counters to me.', to: null, action: 'openCounters' },
       { label: 'Tell me about positioning.', to: 'pos' },
       { label: 'Later.', to: null },
     ],
+  },
+  orders: {
+    text: 'You are on the field with them, so you give orders the way a commander does — by shouting one word.\n\n<span class="em">V</span> is follow me: they keep station on you and move when you move. <span class="em">G</span> is hold: they plant where they stand and do not chase. <span class="em">B</span> is advance on wherever you are looking. <span class="em">N</span> is charge — formation off, everyone forward, and good luck getting them back.\n\n<span class="em">M</span> falls back to the banner in order.',
+    opts: [
+      { label: 'And the formations?', to: 'forms' },
+      { label: 'Can I order one squad on its own?', to: 'squads' },
+      { label: 'Back.', to: 'root' },
+    ],
+  },
+  forms: {
+    text: '<span class="em">F</span> cycles the formation. That is the shape they stand in, and it is a real trade every time.\n\nA line has frontage. A column moves. A shield wall stops a charge dead and gets murdered from the side. A wedge breaks one point in their line. Skirmish order makes area damage almost worthless against you. Echelon cannot be flanked at all.\n\nBonuses only apply once they are ACTUALLY standing in it. Ordering a shield wall in the middle of a melee gets you nothing.',
+    opts: [
+      { label: 'Teach me one.', to: null, action: 'drill' },
+      { label: 'Back.', to: 'root' },
+    ],
+  },
+  squads: {
+    text: 'Every card you put down is a squad — the Knight card is eight men, the Giant is one.\n\n<span class="em">T</span> cycles which squad you are talking to. Pick one and your next order goes only to them; leave it on the whole army and everyone hears it.\n\nThat is how you refuse a flank with one squad while the rest press forward. It is also how most battles are actually won.',
+    opts: [{ label: 'Back.', to: 'root' }],
   },
   pos: {
     text: 'Three things, and only three.\n\n<span class="em">One:</span> ranged units behind a guardian hit twenty-two per cent harder. Walk them up together.\n\n<span class="em">Two:</span> attacks from outside a unit\'s front arc do twenty per cent more. Flank, and do not be flanked.\n\n<span class="em">Three:</span> archers on high ground gain range and damage both. The ridge is not scenery.',

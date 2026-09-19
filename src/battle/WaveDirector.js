@@ -16,7 +16,8 @@
    the game needs to know which is running.
 */
 
-import { UNITS } from '../data/Units.js';
+import { UNITS, countAt } from '../data/Units.js';
+import { getFormation } from '../data/Formations.js';
 import { CFG } from '../core/Config.js';
 import { clamp, rng } from '../core/Util.js';
 
@@ -80,23 +81,29 @@ export class WaveDirector {
 
     const line = b.deployLine[1];
     const lanes = w.units.length;
+    const lvl = w.level || b.opts.enemy?.level || 1;
+    const form = getFormation(w.formation || b.foeArmy?.formationId || 'line');
+
     w.units.forEach((id, i) => {
       const u = UNITS[id];
-      // spread the wave across the field so it reads as a formation rather
+      // spread the wave across the field so it reads as a battle line rather
       // than a pile, and so the player can see it coming
       const spreadX = lanes === 1 ? 0 : (i / (lanes - 1) - 0.5) * Math.min(26, lanes * 7);
       const x = clamp(spreadX + rng.range(-1.4, 1.4), -b.field.W / 2 + 5, b.field.W / 2 - 5);
       const z = clamp(line + 3 + rng.range(0, 3), line, b.field.L / 2 - 4);
-      const count = u.count || 1;
-      const spread = 0.9 + count * 0.34;
+
+      // every card the enemy fields is a SQUAD too, laid out in formation
+      const count = countAt(u, lvl);
+      const slots = form.slots(count);
+      const face = -Math.PI / 2;
+      const cos = Math.cos(face), sin = Math.sin(face);
+      const made = [];
       for (let k = 0; k < count; k++) {
-        const a = count === 1 ? 0 : (k / count) * Math.PI * 2;
-        const d = count === 1 ? 0 : spread;
-        const e = b.spawn(id, 1, x + Math.cos(a) * d, z + Math.sin(a) * d, {
-          lvl: w.level || b.opts.enemy?.level || 1,
-        });
-        if (e) this.spawned.push(e);
+        const s = slots[k] || { x: 0, z: 0 };
+        const e = b.spawn(id, 1, x + cos * s.z - sin * s.x, z + sin * s.z + cos * s.x, { lvl });
+        if (e) { made.push(e); this.spawned.push(e); }
       }
+      if (made.length) b.foeArmy?.add(id, made, { x, z, facing: face });
     });
 
     b.onWaveStart(this.idx + 1, this.waves.length, w);

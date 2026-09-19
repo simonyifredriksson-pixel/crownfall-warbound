@@ -61,6 +61,10 @@ const U = (o) => ({
   faction: 'crown', ...o,
 });
 
+/* A rival house's soldier. You fight these; you never recruit them, so they
+   are not collectible and never appear in the card pool. */
+const H = (o) => U({ collectible: false, tags: ['human'], ...o });
+
 export const UNITS = {
 
   /* =======================================================================
@@ -70,8 +74,14 @@ export const UNITS = {
      ======================================================================= */
 
   knight: U({
+    /* Eight knights, not one. The Knight card is a WALL — it is meant to
+       arrive as a line you can hide things behind. Per-knight health is set
+       low for that reason; the squad's staying power is in its frontage.
+       At max level it is five enormous veterans instead of eight ordinary
+       men, and each one is worth roughly three of the originals. */
     id: 'knight', name: 'Knight', rarity: 'common', cost: 3, role: 'guardian',
-    hp: 520, dmg: 38, atkSpeed: 0.85, range: 1.9, moveSpeed: 3.4, mass: 2, armor: 14,
+    count: 8, minCount: 5, fixedCount: true,
+    hp: 100, dmg: 13, atkSpeed: 0.85, range: 1.9, moveSpeed: 3.4, mass: 2, armor: 14,
     dmgType: 'slash', armorType: 'heavy',
     abilities: ['shieldBrace', 'holdTheLine', 'vengefulGuard', 'lastStand'],
     tags: ['human', 'shieldwall', 'frontline', 'starter'],
@@ -80,7 +90,11 @@ export const UNITS = {
   }),
 
   mage: U({
+    /* One mage. A hero figure: expensive, irreplaceable, and the single
+       biggest damage source you own. Everything about her is a reason to
+       put a squad in front of her. */
     id: 'mage', name: 'Mage', rarity: 'common', cost: 4, role: 'caster',
+    count: 1, fixedCount: true,
     hp: 210, dmg: 30, atkSpeed: 0.7, range: 12.5, moveSpeed: 3.1, mass: 1, armor: 0,
     dmgType: 'arcane', armorType: 'unarmored',
     abilities: ['arcaneNova', 'manaShield', 'emberbolt', 'elementalMastery'],
@@ -90,7 +104,12 @@ export const UNITS = {
   }),
 
   giant: U({
+    /* One giant, and it stays one giant forever. The Giant card is the
+       counterweight to the Knight card: instead of eight bodies covering a
+       wide front, it is a single body that cannot be flanked apart, does not
+       care about splash, and plugs one gap absolutely. */
     id: 'giant', name: 'Giant', rarity: 'common', cost: 6, role: 'melee',
+    count: 1, fixedCount: true,
     hp: 1750, dmg: 105, atkSpeed: 0.45, range: 2.6, moveSpeed: 2.3, mass: 4, armor: 6,
     dmgType: 'blunt', armorType: 'heavy',
     abilities: ['groundSlam', 'wallbreaker', 'unstoppable', 'titanfall'],
@@ -855,9 +874,272 @@ export const UNITS = {
     lore: 'The last order it was given was "hold". The king who gave it has been dust for six centuries. It is still holding.',
     mechanic: 'Four pylons feed it. Each pylon alive grants a different aura — armour, haste, reflection, regeneration. Break them in the right order.',
   }),
+  /* =========================================================================
+     ═══ THE RIVAL HOUSES ═══
+
+     The armies of the other castles. These are the enemy you fight most of the
+     time, and they are PEOPLE: they stand in formation, they hold ground, and
+     every one of their units is a counter to something you might do.
+
+     None of them is collectible. You beat them; you do not recruit them.
+     ========================================================================= */
+
+
+  /* ---- HOUSE VERRIN — the wall ---- */
+
+  verrinLevy: H({
+    id: 'verrinLevy', name: 'Verrin Levy', rarity: 'common', cost: 2, role: 'guardian', faction: 'verrin',
+    hp: 120, dmg: 15, atkSpeed: 0.95, range: 1.8, moveSpeed: 3.5, mass: 1, armor: 6,
+    dmgType: 'pierce', armorType: 'light', count: 8, minCount: 5,
+    abilities: ['holdTheLine'],
+    tags: ['human', 'shieldwall', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x5a6478, accent: 0xc8ced8, metal: 0x9aa0aa, weapon: 'spear', shield: 'round', helm: 'kettle', scale: 0.95 },
+    lore: 'Farmhands in a grey surcoat, drilled every seventh day for eleven years. They are not good. They are simply always exactly where they were told to be.',
+  }),
+
+  verrinSerjeant: H({
+    id: 'verrinSerjeant', name: 'Verrin Serjeant', rarity: 'uncommon', cost: 4, role: 'guardian', faction: 'verrin',
+    hp: 235, dmg: 26, atkSpeed: 0.8, range: 1.9, moveSpeed: 3.2, mass: 2, armor: 16,
+    dmgType: 'slash', armorType: 'heavy', count: 5, minCount: 3,
+    abilities: ['shieldBrace', 'bulwark'],
+    tags: ['human', 'shieldwall', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'heavy', primary: 0x4a5464, accent: 0xc8ced8, metal: 0xb8c0cc, weapon: 'sword', shield: 'kite', helm: 'great', cape: 0x5a6478, scale: 1.0 },
+    lore: 'Twenty years in the same shield wall. He has a scar for every man who tried to come round the end of it.',
+  }),
+
+  verrinPike: H({
+    id: 'verrinPike', name: 'Verrin Pikes', rarity: 'uncommon', cost: 4, role: 'guardian', faction: 'verrin',
+    hp: 150, dmg: 30, atkSpeed: 0.62, range: 3.6, moveSpeed: 2.9, mass: 2, armor: 8,
+    dmgType: 'pierce', armorType: 'light', count: 6, minCount: 4,
+    abilities: ['braceForCharge', 'phalanx'],
+    tags: ['human', 'antilarge', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x5a6478, accent: 0x8a9098, metal: 0xa8b0bc, weapon: 'pike', helm: 'kettle', scale: 0.97 },
+    lore: 'Eighteen feet of ash with a spike on the end. Against a horse it is the only argument that has ever worked.',
+  }),
+
+  verrinCrossbow: H({
+    id: 'verrinCrossbow', name: 'Verrin Crossbows', rarity: 'common', cost: 3, role: 'ranged', faction: 'verrin',
+    hp: 105, dmg: 44, atkSpeed: 0.38, range: 15, moveSpeed: 3.0, mass: 1, armor: 4,
+    dmgType: 'pierce', armorType: 'light', count: 5, minCount: 3,
+    abilities: ['highGround'],
+    tags: ['human', 'ranged', 'armorpierce', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x4a5464, accent: 0x8a9098, metal: 0x9aa0aa, weapon: 'crossbow', helm: 'cap', scale: 0.94 },
+    lore: 'Slow, and it does not matter. A pavise, a windlass and all afternoon.',
+  }),
+
+  verrinOutrider: H({
+    id: 'verrinOutrider', name: 'Verrin Outriders', rarity: 'uncommon', cost: 4, role: 'cavalry', faction: 'verrin',
+    hp: 175, dmg: 34, atkSpeed: 0.8, range: 2.3, moveSpeed: 6.6, mass: 2, armor: 8,
+    dmgType: 'slash', armorType: 'light', count: 3, minCount: 2,
+    abilities: ['charge'],
+    tags: ['human', 'fast', 'flank', 'house'],
+    art: { archetype: 'cavalry', variant: 'horse', primary: 0x5a6478, accent: 0xc8ced8, metal: 0xa8b0bc, weapon: 'sword', helm: 'kettle', scale: 1.0 },
+    lore: 'Sent wide to find your flank, and to tell the Marshal in good time if you have not got one.',
+  }),
+
+  /* ---- HOUSE KARN — the charge ---- */
+
+  karnHousecarl: H({
+    id: 'karnHousecarl', name: 'Karn Housecarls', rarity: 'uncommon', cost: 4, role: 'melee', faction: 'karn',
+    hp: 190, dmg: 40, atkSpeed: 0.78, range: 2.0, moveSpeed: 4.2, mass: 2, armor: 12,
+    dmgType: 'slash', armorType: 'heavy', count: 5, minCount: 3,
+    abilities: ['whirlwind', 'bloodlust'],
+    tags: ['human', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'heavy', primary: 0x8a3a30, accent: 0xd9a441, metal: 0xb0a89a, weapon: 'greataxe', helm: 'horned', cape: 0x8a3a30, scale: 1.02 },
+    lore: 'Sworn to the Red Spur, fed at her table, and entirely unrecoverable once they start moving forward.',
+  }),
+
+  karnLancer: H({
+    id: 'karnLancer', name: 'Karn Lancers', rarity: 'rare', cost: 5, role: 'cavalry', faction: 'karn',
+    hp: 250, dmg: 62, atkSpeed: 0.6, range: 2.8, moveSpeed: 7.2, mass: 3, armor: 14,
+    dmgType: 'pierce', armorType: 'heavy', count: 4, minCount: 3,
+    abilities: ['charge', 'trample'],
+    tags: ['human', 'cavalry', 'shock', 'house'],
+    art: { archetype: 'cavalry', variant: 'horse', primary: 0x8a3a30, accent: 0xd9a441, metal: 0xc0c6d0, weapon: 'lance', helm: 'great', cape: 0x8a3a30, scale: 1.06 },
+    lore: 'The whole point of House Karn, delivered at nine yards a second.',
+  }),
+
+  karnDestrier: H({
+    id: 'karnDestrier', name: 'Karn Destriers', rarity: 'epic', cost: 6, role: 'cavalry', faction: 'karn',
+    hp: 340, dmg: 78, atkSpeed: 0.58, range: 2.9, moveSpeed: 7.6, mass: 3, armor: 20,
+    dmgType: 'blunt', armorType: 'heavy', count: 3, minCount: 2,
+    abilities: ['charge', 'trample', 'unstoppable'],
+    tags: ['human', 'cavalry', 'shock', 'elite', 'house'],
+    art: { archetype: 'cavalry', variant: 'horse', primary: 0x6a2a24, accent: 0xffe9a8, metal: 0xd8dee8, weapon: 'lance', helm: 'winged', cape: 0xd9a441, scale: 1.12 },
+    lore: 'Barded horses the size of a doorway. They are not fast so much as impossible to stop.',
+  }),
+
+  karnArbalest: H({
+    id: 'karnArbalest', name: 'Karn Arbalests', rarity: 'uncommon', cost: 4, role: 'ranged', faction: 'karn',
+    hp: 130, dmg: 58, atkSpeed: 0.34, range: 16, moveSpeed: 3.0, mass: 1, armor: 6,
+    dmgType: 'pierce', armorType: 'light', count: 4, minCount: 3,
+    abilities: ['pinningShot'],
+    tags: ['human', 'ranged', 'armorpierce', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x7a332b, accent: 0xd9a441, metal: 0x9aa0aa, weapon: 'crossbow', helm: 'cap', scale: 0.96 },
+    lore: 'Karn keeps exactly enough shooters to make you stand still long enough to be charged.',
+  }),
+
+  karnHornblower: H({
+    id: 'karnHornblower', name: 'Karn Hornblower', rarity: 'rare', cost: 4, role: 'support', faction: 'karn',
+    hp: 210, dmg: 16, atkSpeed: 0.7, range: 2.0, moveSpeed: 4.0, mass: 1, armor: 8,
+    dmgType: 'blunt', armorType: 'light', count: 1,
+    abilities: ['warBanner', 'logistics'],
+    tags: ['human', 'support', 'aura', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x8a3a30, accent: 0xffe9a8, metal: 0xd9a441, weapon: 'banner', helm: 'cap', cape: 0xd9a441, scale: 1.0 },
+    lore: 'One note means forward. There is no note for anything else.',
+  }),
+
+  /* ---- HOUSE ORSA — the engine ---- */
+
+  orsaLevy: H({
+    id: 'orsaLevy', name: 'Orsa Levy', rarity: 'common', cost: 2, role: 'guardian', faction: 'orsa',
+    hp: 115, dmg: 14, atkSpeed: 0.9, range: 1.8, moveSpeed: 3.6, mass: 1, armor: 5,
+    dmgType: 'slash', armorType: 'light', count: 7, minCount: 4,
+    abilities: ['holdTheLine'],
+    tags: ['human', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'slim', primary: 0x4a5a3a, accent: 0xc8a860, metal: 0x9aa0aa, weapon: 'shortsword', shield: 'round', helm: 'cap', scale: 0.93 },
+    lore: 'Hired for the season. Paid to stand in front of the interesting equipment.',
+  }),
+
+  orsaHalberd: H({
+    id: 'orsaHalberd', name: 'Orsa Halberdiers', rarity: 'uncommon', cost: 4, role: 'guardian', faction: 'orsa',
+    hp: 165, dmg: 38, atkSpeed: 0.6, range: 3.1, moveSpeed: 3.0, mass: 2, armor: 12,
+    dmgType: 'blunt', armorType: 'heavy', count: 5, minCount: 3,
+    abilities: ['braceForCharge', 'markTheWeak'],
+    tags: ['human', 'antilarge', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'heavy', primary: 0x3f4a32, accent: 0xc8a860, metal: 0xa8b0bc, weapon: 'spear', helm: 'great', scale: 1.0 },
+    lore: 'An axe, a spike and a hook on one pole, so that whatever is in front of them is the wrong answer.',
+  }),
+
+  orsaHandgunner: H({
+    id: 'orsaHandgunner', name: 'Orsa Handgunners', rarity: 'rare', cost: 4, role: 'ranged', faction: 'orsa',
+    hp: 110, dmg: 70, atkSpeed: 0.28, range: 15.5, moveSpeed: 3.1, mass: 1, armor: 3,
+    dmgType: 'pierce', armorType: 'light', count: 4, minCount: 3,
+    abilities: ['ranging'],
+    tags: ['human', 'ranged', 'armorpierce', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x4a5a3a, accent: 0xc8a860, metal: 0x8a8070, weapon: 'crossbow', helm: 'kettle', scale: 0.95 },
+    lore: 'Louder than it is accurate, and it does not care in the slightest what your armour is made of.',
+  }),
+
+  orsaEngineer: H({
+    id: 'orsaEngineer', name: 'Orsa Engineer', rarity: 'rare', cost: 4, role: 'support', faction: 'orsa',
+    hp: 175, dmg: 20, atkSpeed: 0.7, range: 8, moveSpeed: 3.4, mass: 1, armor: 6,
+    dmgType: 'fire', armorType: 'light', count: 1,
+    abilities: ['mendWounds', 'slickOil'],
+    tags: ['human', 'support', 'house'],
+    art: { archetype: 'humanoid', build: 'slim', primary: 0x5a5a3a, accent: 0xc25a2a, metal: 0x8a8070, weapon: 'hammer', helm: 'cap', scale: 0.94 },
+    lore: 'Carries a notebook, a mallet and an unshakeable belief that the problem is solvable.',
+  }),
+
+  orsaBombard: H({
+    id: 'orsaBombard', name: 'Orsa Bombard', rarity: 'epic', cost: 6, role: 'siege', faction: 'orsa',
+    hp: 620, dmg: 150, atkSpeed: 0.18, range: 26, minRange: 9, moveSpeed: 1.5, mass: 4, armor: 12,
+    dmgType: 'blunt', armorType: 'structure', count: 1, splash: 3.4,
+    abilities: ['siegeShot'],
+    tags: ['siege', 'artillery', 'house'],
+    art: { archetype: 'siege', variant: 'catapult', primary: 0x4a4038, accent: 0xc8a860, metal: 0x7a7266, scale: 1.05 },
+    lore: 'Takes four minutes to load and removes a section of wall, or a section of your line, without distinguishing between them.',
+  }),
+
+  /* ---- THE FREE COMPANY — the professionals ---- */
+
+  fcVeteran: H({
+    id: 'fcVeteran', name: 'Company Veterans', rarity: 'rare', cost: 4, role: 'melee', faction: 'freeCompany',
+    hp: 200, dmg: 36, atkSpeed: 0.86, range: 1.9, moveSpeed: 4.0, mass: 2, armor: 13,
+    dmgType: 'slash', armorType: 'heavy', count: 5, minCount: 3,
+    abilities: ['riposte', 'execute'],
+    tags: ['human', 'frontline', 'elite', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x6a5a3a, accent: 0x8fbf4a, metal: 0xb0b8c4, weapon: 'sword', shield: 'heater', helm: 'great', cape: 0x4a4030, scale: 1.0 },
+    lore: 'Every one of them has survived something that killed the man beside them, and they all fight like it.',
+  }),
+
+  fcPikeman: H({
+    id: 'fcPikeman', name: 'Company Pikes', rarity: 'uncommon', cost: 4, role: 'guardian', faction: 'freeCompany',
+    hp: 155, dmg: 32, atkSpeed: 0.64, range: 3.5, moveSpeed: 3.1, mass: 2, armor: 9,
+    dmgType: 'pierce', armorType: 'light', count: 6, minCount: 4,
+    abilities: ['braceForCharge', 'phalanx'],
+    tags: ['human', 'antilarge', 'frontline', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x6a5a3a, accent: 0x8fbf4a, metal: 0xa8b0bc, weapon: 'pike', helm: 'kettle', scale: 0.97 },
+    lore: 'The square is old, boring and has never once been improved upon.',
+  }),
+
+  fcCrossbow: H({
+    id: 'fcCrossbow', name: 'Company Crossbows', rarity: 'uncommon', cost: 3, role: 'ranged', faction: 'freeCompany',
+    hp: 115, dmg: 46, atkSpeed: 0.4, range: 15, moveSpeed: 3.3, mass: 1, armor: 4,
+    dmgType: 'pierce', armorType: 'light', count: 5, minCount: 3,
+    abilities: ['highGround', 'pinningShot'],
+    tags: ['human', 'ranged', 'house'],
+    art: { archetype: 'humanoid', build: 'slim', primary: 0x5a4f36, accent: 0x8fbf4a, metal: 0x9aa0aa, weapon: 'crossbow', helm: 'hood', scale: 0.94 },
+    lore: 'Paid by the day, not the shot, which they will tell you if you complain about the rate of fire.',
+  }),
+
+  fcRoughrider: H({
+    id: 'fcRoughrider', name: 'Company Roughriders', rarity: 'rare', cost: 5, role: 'cavalry', faction: 'freeCompany',
+    hp: 210, dmg: 48, atkSpeed: 0.72, range: 2.5, moveSpeed: 7.0, mass: 2, armor: 10,
+    dmgType: 'slash', armorType: 'light', count: 3, minCount: 2,
+    abilities: ['charge', 'momentum'],
+    tags: ['human', 'cavalry', 'flank', 'house'],
+    art: { archetype: 'cavalry', variant: 'horse', primary: 0x6a5a3a, accent: 0x8fbf4a, metal: 0xa8b0bc, weapon: 'sword', helm: 'cap', cape: 0x4a4030, scale: 1.02 },
+    lore: 'They will find the one gap in your line, and they will find it before you know it is there.',
+  }),
+
+  fcCaptain: H({
+    id: 'fcCaptain', name: 'Company Captain', rarity: 'epic', cost: 5, role: 'support', faction: 'freeCompany',
+    hp: 420, dmg: 44, atkSpeed: 0.8, range: 2.1, moveSpeed: 4.2, mass: 2, armor: 18,
+    dmgType: 'slash', armorType: 'heavy', count: 1,
+    abilities: ['warBanner', 'logistics', 'riposte'],
+    tags: ['human', 'support', 'aura', 'elite', 'house'],
+    art: { archetype: 'humanoid', build: 'medium', primary: 0x4a4030, accent: 0xffe9a8, metal: 0xc8ced8, weapon: 'sword', shield: 'sigil', helm: 'winged', cape: 0x8fbf4a, scale: 1.04 },
+    lore: 'Keeps the company steady by the simple method of never once looking worried.',
+  }),
 };
 
 /* ---------------------------------------------------------------- queries */
+
+/* ==========================================================================
+   SQUAD WIDENING PASS
+
+   The roster above was authored back when a card put one or two figures on
+   the field, and an army of nine bodies does not look or play like an army.
+   Every LINE unit is widened into a real squad here, and its per-body health
+   and damage are divided by exactly the same factor.
+
+   So the squad's total health and total damage are unchanged. This alters
+   what an army LOOKS like and what you can do with it — frontage, formation,
+   flanks, how splash damage lands — without touching the balance the sim and
+   the counter matrix were tuned against.
+
+   Hero figures opt out with `fixedCount`: the Mage and the Giant are meant to
+   be one irreplaceable body, and the Knight's eight-man line is authored by
+   hand because it is the shape the whole starting army is built around.
+   ========================================================================== */
+
+const SQUAD_TARGET = {
+  guardian: 6,   // a line has to be wide enough to have a flank
+  melee: 7,
+  ranged: 5,
+  assassin: 3,
+  cavalry: 4,
+  beast: 4,
+  flyer: 3,
+  // caster / support / summoner / siege stay as authored: they are single
+  // figures you are meant to protect, and multiplying them multiplies their
+  // abilities, which is a balance change rather than a presentation one
+};
+
+for (const u of Object.values(UNITS)) {
+  if (u.fixedCount || u.isBoss || u.tags?.includes('boss')) continue;
+  const want = SQUAD_TARGET[u.role];
+  if (!want) continue;
+  if (u.mass >= 4) continue;                    // giants and colossi stay single
+  const from = u.count || 1;
+  if (want <= from) continue;
+
+  u.hp = Math.max(24, Math.round(u.hp * from / want));
+  u.dmg = Math.round(u.dmg * from / want * 10) / 10;
+  u.count = want;
+  u.minCount = Math.max(2, Math.round(want * 0.6));
+}
 
 export const COLLECTIBLE = Object.values(UNITS).filter(u => u.collectible);
 export const STARTERS = ['knight', 'mage', 'giant'];
@@ -872,25 +1154,87 @@ export function unitsByTag(tag) {
   return Object.values(UNITS).filter(u => u.tags?.includes(tag));
 }
 
-/** Level-scaled stats. One function, used by the sim, the card UI and the AI. */
+/**
+ * Level-scaled stats for ONE BODY.
+ *
+ * Two things scale here, and the second one is not optional:
+ *
+ *   1. Ordinary growth, `growth^(level-1)`.
+ *   2. SQUAD CONSOLIDATION. When a squad thins from eight men to seven, the
+ *      seven who remain absorb the strength of the one who is gone.
+ *
+ * Without (2), the level at which a squad loses a body is a level where the
+ * card gets WEAKER overall — you pay shards and gold to field a worse army.
+ * That is the single most demoralising thing a progression system can do, and
+ * the command suite asserts against it at every level from 1 to 15.
+ *
+ * With it, total squad strength is exactly `baseCount * base * growth^n` at
+ * every level, and thinning is purely a change of SHAPE: fewer, far heavier
+ * soldiers holding the same frontage.
+ */
 export function statsAt(unit, level, growth = 1.088) {
   const m = Math.pow(growth, level - 1);
+  const k = (unit.count || 1) / countAt(unit, level);
   return {
-    hp: Math.round(unit.hp * m),
-    dmg: Math.round(unit.dmg * m * 10) / 10,
+    hp: Math.round(unit.hp * m * k),
+    dmg: Math.round(unit.dmg * m * k * 10) / 10,
     armor: Math.round(unit.armor * (1 + (level - 1) * 0.045)),
     mult: m,
+    consolidation: k,
   };
 }
 
 /** Visual tier 0..4 — drives armour detail, trim, glow and aura in UnitArt. */
 export const tierOf = (level) => Math.min(4, Math.floor((level - 1) / 3));
 
+/* ==========================================================================
+   SQUAD SIZE
+
+   A card is a SQUAD, not a figure. The Knight card puts eight knights on the
+   field; the Giant card puts one giant. That is the whole reason an army
+   looks like an army.
+
+   Levelling a card makes the squad SMALLER and each soldier much better:
+
+     Knight   lvl 1   8 men    lvl 15   5 men, each ~2.7x the soldier
+     Militia  lvl 1  10 men    lvl 15   6 men
+     Giant    lvl 1   1        lvl 15   1, and it is a monster
+
+   Net squad power still climbs (about 1.7x by max level, before abilities),
+   but the SHAPE of the squad changes as it veterans up — fewer, heavier,
+   harder to splash down, and much harder to rout. It also means a maxed
+   Knight card reads instantly on the field: five enormous veterans instead of
+   eight ordinary men.
+
+   `shrink` is per visual tier, so the squad thins at exactly the levels where
+   the model visibly gains its next piece of kit.
+   ========================================================================== */
+
+/** How many bodies this card fields at `level`. */
+export function countAt(unit, level = 1) {
+  const base = unit.count || 1;
+  if (base <= 1) return 1;                       // single figures never split
+  const shrink = unit.squadShrink ?? 0.88;
+  const floor = unit.minCount ?? Math.max(2, Math.round(base * 0.55));
+  const n = Math.round(base * Math.pow(shrink, tierOf(level)));
+  return Math.max(floor, Math.min(base, n));
+}
+
+/** The level at which the squad next loses a body, or null. For card UI. */
+export function nextShrinkLevel(unit, level = 1) {
+  const now = countAt(unit, level);
+  for (let l = level + 1; l <= 15; l++) {
+    if (countAt(unit, l) < now) return l;
+  }
+  return null;
+}
+
 /** Rough "how scary is it" number, for AI target priority and briefing screens. */
 export function threatScore(unit, level = 1) {
   const s = statsAt(unit, level);
-  const dps = s.dmg * unit.atkSpeed * (unit.count || 1);
-  const ehp = s.hp * (1 + s.armor / 40) * (unit.count || 1);
+  const n = countAt(unit, level);
+  const dps = s.dmg * unit.atkSpeed * n;
+  const ehp = s.hp * (1 + s.armor / 40) * n;
   const rangeBonus = unit.range > 8 ? 1.25 : 1;
   const roleBonus = { support: 1.6, caster: 1.4, summoner: 1.5, siege: 1.2 }[unit.role] || 1;
   return Math.round(Math.sqrt(dps * ehp) * rangeBonus * roleBonus / 10);

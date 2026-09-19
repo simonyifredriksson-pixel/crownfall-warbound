@@ -103,6 +103,19 @@ export const TUTORIAL = [
   },
 
   {
+    id: 'orders',
+    objective: 'Give your army an order',
+    hint: 'V follow me · G hold ground · B advance on the crosshair · N charge. F changes formation.',
+    inBattle: true,
+    say: [
+      'They are yours, Commander. Tell them something.',
+      'Press <span class="em">V</span> and they keep station on you. <span class="em">G</span> and they plant where they stand and do not chase. <span class="em">B</span> sends them at whatever you are looking at.',
+      '<span class="em">F</span> changes the shape they stand in. You know the line and the column; Captain Roon can teach you the rest.',
+    ],
+    done: { evt: EV.ARMY_ORDER },
+  },
+
+  {
     id: 'win1',
     objective: 'Beat every wave',
     hint: 'Hold the line. Each wave is a little harder than the last.',

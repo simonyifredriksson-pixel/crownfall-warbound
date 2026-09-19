@@ -125,6 +125,89 @@ export const FACTIONS = {
     codex: 'Nine hundred years of standing perfectly still, waiting for an order that will not come. They will outlast this war too.',
   },
 
+  /* =======================================================================
+     THE RIVAL HOUSES
+
+     The war is a war between CASTLES. These are people: they hold formation,
+     they wheel to face a threat, they have a commander on the field who can
+     be killed, and killing them ends it. They are the main enemy of the
+     campaign, and the monster factions below them are the rare, bad thing at
+     the edge of the map.
+
+     Each house is built around one idea about how a battle is won, and the
+     `doctrine` fields drive what its army actually DOES in the field —
+     which formation it marches in, which it fights in, and whether it comes
+     to you or makes you come to it.
+     ======================================================================= */
+
+  verrin: {
+    id: 'verrin', name: 'House Verrin', icon: ic('shieldwall'),
+    color: '#5a6478', accent: '#c8ced8',
+    banner: 'grey', terrain: 'farmland', house: true,
+    roster: ['verrinLevy', 'verrinSerjeant', 'verrinCrossbow', 'verrinPike', 'verrinOutrider'],
+    doctrine: {
+      aggression: 0.42, saveThreshold: 7, pushInterval: 9, defensive: true, holdPoints: true,
+      opening: ['verrinLevy', 'verrinCrossbow'],
+      marchFormation: 'line', wallFormation: 'shieldwall', chargeFormation: 'line',
+    },
+    identity: 'A drilled army that does not make mistakes and does not hurry.',
+    strength: 'Formation. Verrin fights in a shield wall and it does not break, and their pikes stop anything that charges it.',
+    weakness: 'A wall only faces one way. Get round the end of a Verrin line and the whole thing comes apart at once.',
+    counterAdvice: 'Do not push into the front of it. Send one fast squad wide, break their flank, and let your line push while they are turning.',
+    codex: 'The Verrins have held the same eleven miles of farmland for two hundred years by never once being interesting about it.',
+  },
+
+  karn: {
+    id: 'karn', name: 'House Karn', icon: ic('horse'),
+    color: '#8a3a30', accent: '#d9a441',
+    banner: 'red', terrain: 'downs', house: true,
+    roster: ['karnHousecarl', 'karnLancer', 'karnArbalest', 'karnDestrier', 'karnHornblower'],
+    doctrine: {
+      aggression: 0.95, saveThreshold: 4, pushInterval: 5, relentless: true, preferBig: true,
+      opening: ['karnLancer', 'karnHousecarl'],
+      marchFormation: 'column', wallFormation: 'line', chargeFormation: 'wedge',
+    },
+    identity: 'Everything charges. Karn wins in the first fifteen seconds or it does not win.',
+    strength: 'Shock. A Karn wedge that reaches your line at speed will go through it.',
+    weakness: 'A charge that is stopped is just a lot of expensive people standing still. Pikes and braced spears gut them.',
+    counterAdvice: 'Be in a shield wall or behind spears BEFORE they arrive. Never be caught in column. Survive the first charge and you have won.',
+    codex: 'Halvi Karn has never given the order to withdraw and does not appear to know the words.',
+  },
+
+  orsa: {
+    id: 'orsa', name: 'House Orsa', icon: ic('siege'),
+    color: '#4a5a3a', accent: '#c8a860',
+    banner: 'green', terrain: 'hills', house: true,
+    roster: ['orsaHandgunner', 'orsaEngineer', 'orsaHalberd', 'orsaBombard', 'orsaLevy'],
+    doctrine: {
+      aggression: 0.3, saveThreshold: 8, pushInterval: 11, defensive: true, protectCasters: true,
+      opening: ['orsaHalberd', 'orsaHandgunner'],
+      marchFormation: 'line', wallFormation: 'shieldwall', chargeFormation: 'line',
+    },
+    identity: 'They do not want to fight you. They want to shoot you from somewhere you cannot reach.',
+    strength: 'Range and engines. Orsa picks the ground, digs in, and makes crossing it expensive.',
+    weakness: 'Almost nothing they field wants to be in a melee. Anything that arrives fast and in numbers ends them.',
+    counterAdvice: 'Skirmish order to cross their killing ground, then charge. Do not trade shots with them — you will lose.',
+    codex: 'Orsa sells engines to both sides of every war and has never been accused of favouritism.',
+  },
+
+  freeCompany: {
+    id: 'freeCompany', name: 'The Free Company', icon: ic('purse'),
+    color: '#6a5a3a', accent: '#8fbf4a',
+    banner: 'mixed', terrain: 'road', house: true,
+    roster: ['fcVeteran', 'fcCrossbow', 'fcPikeman', 'fcRoughrider', 'fcCaptain'],
+    doctrine: {
+      aggression: 0.66, saveThreshold: 6, pushInterval: 7, preferFlank: true, counterPlay: true,
+      opening: ['fcVeteran', 'fcCrossbow'],
+      marchFormation: 'line', wallFormation: 'echelon', chargeFormation: 'wedge',
+    },
+    identity: 'Professionals. They have fought for everyone you have fought, and they remember how you did it.',
+    strength: 'No weaknesses worth the name. A balanced force that answers whatever you bring.',
+    weakness: 'They are paid, not sworn. Hurt them badly enough and the contract stops being worth it.',
+    counterAdvice: 'There is no trick here. Bring a real army, hold your formation, and win the fight in front of you.',
+    codex: 'Captain Ysolde Marrek has been on the winning side of six wars and the losing side of none, which she says is a matter of paperwork.',
+  },
+
   /* The player's own side, for the codex and unit colouring. */
   crown: {
     id: 'crown', name: 'Army of the Iron Crown', icon: ic('crown'),

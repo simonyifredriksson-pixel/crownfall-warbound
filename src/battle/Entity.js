@@ -141,6 +141,19 @@ export class Entity {
     this.bonusDmgMult = o.bonusDmgMult || 1;
     this.bonusMoveMult = o.bonusMoveMult || 1;
 
+    /* ---- command state (owned by battle/Command.js) ----
+       `squad` is the card this body was deployed with; `slotGoal` is where
+       its formation wants it standing; `leash` is how far it may chase an
+       enemy from that slot before it must return. A unit with no squad
+       behaves exactly as it always did. */
+    this.squad = null;
+    this.slotIndex = 0;
+    this.slotGoal = null;
+    this.leash = Infinity;
+    this.formationMods = null;
+    this.formationFacing = null;
+    this.chargeT = 0;          // seconds of "just arrived at speed", for wedge
+
     this.mods = foldMods([]);
     this.recalc();
 
@@ -172,6 +185,19 @@ export class Entity {
       if (a.onRecalc) a.onRecalc(this, m);
     }
 
+    /* Formation bonuses fold in exactly like a passive's mods, and ONLY while
+       the squad is actually standing in the shape. `Command.js` clears this
+       the moment a squad breaks up, so a shield wall that has been scattered
+       stops being a shield wall. */
+    if (this.formationMods) {
+      for (const k in this.formationMods) {
+        const v = this.formationMods[k];
+        if (typeof v === 'boolean') m[k] = m[k] || v;
+        else if (k === 'armorAdd') m[k] = (m[k] || 0) + v;
+        else m[k] = (m[k] ?? 1) * v;
+      }
+    }
+
     m.dmgMult *= this.auraDmgMult * this.bonusDmgMult;
     m.dmgTakenMult *= this.auraDmgTaken;
     m.atkSpeedMult *= this.auraAtkSpeed;
@@ -179,6 +205,12 @@ export class Entity {
     m.armorAdd += this.auraArmor;
 
     this.mods = m;
+
+    // formation traits the damage pipeline reads directly
+    this.frontalTakenMult = m.frontalTakenMult ?? 1;
+    this.splashTakenMult = m.splashTakenMult ?? 1;
+    this.noFlank = !!m.noFlank;
+    this.chargeMult = m.chargeMult ?? 1;
 
     this.armor = Math.max(0, this.baseArmor + m.armorAdd);
     this.damage = this.baseDmg * m.dmgMult;
@@ -270,8 +302,23 @@ export class Entity {
 
   /** Is `o` outside this unit's front arc? Used for the flanking bonus. */
   isFlankedBy(o) {
+    // Echelon exists to make this answer "no". A formation that refuses its
+    // flank presents a front to whatever comes round the end of it.
+    if (this.noFlank) return false;
     const a = Math.atan2(o.z - this.z, o.x - this.x);
     return Math.abs(angleDelta(this.facing, a)) > CFG.battle.flankAngle / 2;
+  }
+
+  /**
+   * Is `o` in the arc this unit's shield actually covers?
+   * A shield wall's protection is FRONTAL — that is the entire trade, and it
+   * has to be measured against the FORMATION's facing, not the individual
+   * soldier's, or a man turning to swing loses the wall for everyone.
+   */
+  isFrontalFrom(o) {
+    const face = this.formationFacing ?? this.facing;
+    const a = Math.atan2(o.z - this.z, o.x - this.x);
+    return Math.abs(angleDelta(face, a)) <= CFG.battle.flankAngle / 2;
   }
 
   faceToward(x, z, dt, rate = 9) {

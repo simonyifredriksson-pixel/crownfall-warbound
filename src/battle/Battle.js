@@ -37,6 +37,9 @@ import { SpatialGrid } from './Spatial.js';
 import { Commander } from './Commander.js';
 import { EnemyDirector } from './EnemyAI.js';
 import { WaveDirector } from './WaveDirector.js';
+import { ArmyCommand, ORDER } from './Command.js';
+import { countAt } from '../data/Units.js';
+import { getFormation } from '../data/Formations.js';
 import { buildUnitModel } from '../art/UnitArt.js';
 import { buildCommanderModel, updateCommanderRig } from '../art/CommanderArt.js';
 import * as Props from '../art/PropArt.js';
@@ -138,6 +141,21 @@ export class Battle {
     this.director = o.enemy?.waves?.length
       ? new WaveDirector(this, { waves: o.enemy.waves, leadIn: o.enemy.waveLeadIn })
       : new EnemyDirector(this, o.enemy || {});
+
+    /* ------------------------------------------------------ army command
+       Both sides get one. Yours takes orders from the keys you press; the
+       enemy's takes them from its commander's doctrine. This is what makes
+       a battle two ARMIES meeting rather than two streams of individuals. */
+    this.army = new ArmyCommand(this, 0, {
+      leader: this.player,
+      formation: o.startFormation || 'line',
+      order: ORDER.FOLLOW,
+    });
+    this.foeArmy = new ArmyCommand(this, 1, {
+      leader: this.enemyCommander || null,
+      formation: o.enemy?.formation || 'line',
+      order: ORDER.ADVANCE,
+    });
 
     /* ------------------------------------------------------- deploy zone */
     this.deployZone = this.field.makeDeployZone(0);
@@ -476,6 +494,19 @@ export class Battle {
     // cover: ranged damage into a treeline is blunted
     if (isRanged && this.field.inCover(tgt.x, tgt.z)) mults.push(1 - CFG.battle.coverReduction);
 
+    /* ---- FORMATION ----
+       A shield wall only protects the arc it is facing, and only against a
+       single blow coming in from that arc. Skirmish order only helps against
+       something that splashes. Both are read from the SQUAD's facing, so a
+       wall that has been turned gets nothing. */
+    if (src && tgt.frontalTakenMult !== 1 && tgt.isFrontalFrom?.(src)) {
+      mults.push(tgt.frontalTakenMult);
+    }
+    if (opt.splash && tgt.splashTakenMult !== 1) mults.push(tgt.splashTakenMult);
+
+    // a wedge that has just made contact hits like a wedge
+    if (src && src.chargeMult > 1 && src.chargeT > 0) mults.push(src.chargeMult);
+
     // high ground for the attacker
     if (src && !src.isStructure && src.baseRange > 3.6 && this.field.isHighGround(src.x, src.z))
       mults.push(1 + CFG.battle.highGroundBonus);
@@ -750,22 +781,35 @@ export class Battle {
     this.command[team] -= cost;
     if (team === 0) { this.stats.commandSpent += cost; this.stats.deployed++; }
 
-    let count = unit.count || 1;
+    const lvl = team === 0 ? card.level : (this.opts.enemy?.level || 1);
+    const awakened = team === 0 ? card.awakened : false;
+
+    // Squad size is a function of the card's LEVEL: a veteran Knight card
+    // fields fewer, much better knights.
+    let count = countAt(unit, lvl);
     if (team === 0) {
       const s = { cost: unit.cost, bonusCount: 0, tags: unit.tags, role: unit.role };
       applyDeckSynergies(this.deckSynergies, s);
       count += s.bonusCount;
     }
 
-    const lvl = team === 0 ? card.level : (this.opts.enemy?.level || 1);
-    const awakened = team === 0 ? card.awakened : false;
+    /* Spawn them already standing in their formation, facing the enemy, so a
+       deployed squad arrives as a unit rather than a ring of people who have
+       to sort themselves out. */
+    const army = team === 0 ? this.army : this.foeArmy;
+    const form = getFormation(army.formationId);
+    const slots = form.slots(count);
+    const face = team === 0 ? Math.PI / 2 : -Math.PI / 2;
+    const cos = Math.cos(face), sin = Math.sin(face);
 
-    const spread = 0.9 + count * 0.34;
+    const made = [];
     for (let i = 0; i < count; i++) {
-      const a = count === 1 ? 0 : (i / count) * TAU;
-      const d = count === 1 ? 0 : spread;
-      this.spawn(unit.id, team, x + Math.cos(a) * d, z + Math.sin(a) * d, { lvl, awakened });
+      const s = slots[i] || { x: 0, z: 0 };
+      const e = this.spawn(unit.id,
+        team, x + cos * s.z - sin * s.x, z + sin * s.z + cos * s.x, { lvl, awakened });
+      if (e) made.push(e);
     }
+    if (made.length) army.add(unit.id, made, { x, z, facing: face });
 
     this.sound('deploy', x, z);
     this.fx('deploySpawn', x, 0.1, z, { color: team === 0 ? PAL.teamPlayerGlow : PAL.teamEnemyGlow, scale: 1.4 });
@@ -897,6 +941,16 @@ export class Battle {
       this.opts.postfx?.pulse?.(0x8e2018, 0.5);
     } else {
       this.log('Enemy commander down', 0);
+      /* A battle between castles ends when one commander falls. You do not
+         have to grind the rest of their army down, and they do not get back
+         up — which is the whole reason their commander is worth hunting. */
+      if (this.opts.enemy?.commanderDecisive) {
+        c.respawnT = Infinity;
+        this.fx('smoke', c.x, 1, c.z, { scale: 3 });
+        this.opts.onEvent?.({ kind: 'callout', big: 'COMMANDER SLAIN', small: c.name });
+        this._endBattle(true, 'commander');
+        return;
+      }
     }
     this.fx('smoke', c.x, 1, c.z, { scale: 2 });
     bus.emit(EV.COMMANDER_DOWN, { team: c.team });
@@ -946,6 +1000,15 @@ export class Battle {
       this._auraT = 0;
       this._gatherAuras();
     }
+
+    /* 3b. army command.
+       This has to run BEFORE the units, so every soldier acts on a slot
+       computed from THIS frame's anchor. Running it after meant a marching
+       formation was always one frame behind its own anchor, which reads as
+       the whole squad dragging. */
+    this.army.update(dt);
+    this.foeArmy.update(dt);
+    this._foeDoctrine(dt);
 
     /* 4. units */
     for (const u of this.units) {
@@ -1151,6 +1214,56 @@ export class Battle {
       return;
     }
 
+    /* ==================================================================
+       ORDERS
+
+       A unit under orders holds its slot. It will fight anything that comes
+       inside its reach, but it will NOT chase past its leash — that single
+       rule is what makes a line stay a line instead of dissolving into a
+       dozen separate duels the moment contact is made.
+
+       A unit with no squad (summons, the enemy's loose units, anything
+       deployed outside the command system) falls through to the old
+       behaviour untouched.
+       ================================================================== */
+    const slot = u.slotGoal;
+    if (slot) {
+      const slotD = Math.hypot(u.x - slot.x, u.z - slot.z);
+      const reachT = tgt ? u.range + (tgt.radius || 0.5) + u.radius * 0.6 : 0;
+      // would fighting this target take the unit off its post?
+      const tgtSlotD = tgt ? Math.hypot(tgt.x - slot.x, tgt.z - slot.z) : Infinity;
+      const inLeash = tgt && tgtSlotD <= u.leash + reachT;
+
+      if (!tgt || !inLeash) {
+        // nothing worth leaving the line for: get back in it
+        if (slotD > 1.0) {
+          const haste = Math.min(2.2, 1 + slotD * 0.05);   // hurry to close a gap
+          this._steer(u, slot.x, slot.z, dt, haste);
+          // a formation charging home hits harder on arrival
+          u.chargeT = u.speedNow > u.moveSpeed * 0.7 ? 0.9 : Math.max(0, u.chargeT - dt);
+        } else {
+          u.speedNow = damp(u.speedNow, 0, 12, dt);
+          u.faceToward(u.x + Math.cos(slot.facing), u.z + Math.sin(slot.facing), dt, 6);
+          this._separate(u, dt);
+          u.chargeT = Math.max(0, u.chargeT - dt);
+        }
+        // a ranged unit standing in its slot still shoots whatever it can see
+        if (tgt && !u.isMelee) {
+          const d2 = u.distTo(tgt);
+          if (d2 <= u.range + (tgt.radius || 0.5) && (!u.minRange || d2 >= u.minRange)) {
+            u.faceToward(tgt.x, tgt.z, dt, 9);
+            this._tryAttack(u, tgt, d2, u.range + (tgt.radius || 0.5) + u.radius * 0.6);
+          }
+        }
+        u.y = this.field.heightAt(u.x, u.z) + (u.flying ? 2.6 : 0);
+        u.onHighGround = this.field.isHighGround(u.x, u.z);
+        return;
+      }
+      // else: the enemy has come to us. Fight it with the normal code below.
+    } else {
+      u.chargeT = Math.max(0, u.chargeT - dt);
+    }
+
     if (!tgt) {
       // nothing to fight: advance toward the enemy banner
       const banner = this.allStructures.find(s => s.kind === 'banner' && s.team !== u.team && s.alive);
@@ -1181,17 +1294,7 @@ export class Battle {
     }
 
     /* --- attack --- */
-    if (d <= reach && (!wantMin || d >= wantMin)) {
-      if (u.attackCd <= 0) {
-        u.attackCd = 1 / Math.max(0.05, u.atkSpeed);
-        u.swing = 1;
-        u.swingHit = false;
-        u.swingTarget = tgt;
-        u.swingDur = Math.min(0.55, u.attackCd * 0.6);
-        if (u.isMelee) this.sound('swing', u.x, u.z, { vol: 0.35 });
-        else this.sound(u.unit.art?.weapon === 'crossbow' ? 'crossbow' : u.role === 'caster' ? 'cast' : 'bow', u.x, u.z, { vol: 0.4 });
-      }
-    }
+    this._tryAttack(u, tgt, d, reach);
 
     if (u.swing > 0) {
       u.swing -= dt / (u.swingDur || 0.4);
@@ -1206,6 +1309,24 @@ export class Battle {
     u.onHighGround = this.field.isHighGround(u.x, u.z);
   }
 
+  /**
+   * Start a swing if the target is in reach and the weapon is ready.
+   * Extracted so a unit holding its slot in formation can shoot without
+   * having to leave it — one attack path, so the two can never disagree.
+   */
+  _tryAttack(u, tgt, d, reach) {
+    if (!tgt || !tgt.alive) return;
+    if (d > reach || (u.minRange && d < u.minRange)) return;
+    if (u.attackCd > 0 || u.swing > 0) return;
+    u.attackCd = 1 / Math.max(0.05, u.atkSpeed);
+    u.swing = 1;
+    u.swingHit = false;
+    u.swingTarget = tgt;
+    u.swingDur = Math.min(0.55, u.attackCd * 0.6);
+    if (u.isMelee) this.sound('swing', u.x, u.z, { vol: 0.35 });
+    else this.sound(u.unit.art?.weapon === 'crossbow' ? 'crossbow' : u.role === 'caster' ? 'cast' : 'bow', u.x, u.z, { vol: 0.4 });
+  }
+
   _resolveAttack(u, tgt) {
     if (!tgt || !tgt.alive) return;
     const d = u.distTo(tgt);
@@ -1216,7 +1337,7 @@ export class Battle {
       if (u.splash) {
         for (const e of this.enemiesNear(u, tgt.x, tgt.z, u.splash)) {
           if (e === tgt) continue;
-          this.dealDamage(u, e, u.damage * 0.55, u.dmgType, {});
+          this.dealDamage(u, e, u.damage * 0.55, u.dmgType, { splash: true });
         }
       }
     } else {
@@ -1425,7 +1546,7 @@ export class Battle {
         if (p.splash) {
           for (const e of this.enemiesNear(p.src, p.x, p.z, p.splash)) {
             if (e === tgt) continue;
-            this.dealDamage(p.src, e, p.dmg * 0.6, p.dmgType, {});
+            this.dealDamage(p.src, e, p.dmg * 0.6, p.dmgType, { splash: true });
           }
           this.fx('explosion', p.x, 0.6, p.z, { scale: p.splash });
         }
@@ -1442,7 +1563,7 @@ export class Battle {
           if (Math.hypot(s.x - p.x, s.z - p.z) < s.radius + 0.6) {
             p.hit.add(s.id);
             this.dealDamage(p.src, s, p.dmg, p.dmgType, {});
-            if (p.splash) for (const e of this.enemiesNear(p.src, p.x, p.z, p.splash)) this.dealDamage(p.src, e, p.dmg * 0.5, p.dmgType, {});
+            if (p.splash) for (const e of this.enemiesNear(p.src, p.x, p.z, p.splash)) this.dealDamage(p.src, e, p.dmg * 0.5, p.dmgType, { splash: true });
             done = true;
             break;
           }
@@ -1453,7 +1574,7 @@ export class Battle {
         if (p.splash) {
           this.fx('explosion', p.x, 0.4, p.z, { scale: p.splash });
           for (const e of this.enemiesNear(p.src, p.x, p.z, p.splash))
-            this.dealDamage(p.src, e, p.dmg * 0.8, p.dmgType, {});
+            this.dealDamage(p.src, e, p.dmg * 0.8, p.dmgType, { splash: true });
         }
         done = true;
       }
@@ -1605,6 +1726,55 @@ export class Battle {
       if (Math.random() < 0.004) intent.dodge = true;
     }
     c.update(this, dt, intent);
+  }
+
+  /* ---------------------------------------------------------- enemy doctrine
+
+     The enemy army is commanded, not herded. Every couple of seconds its
+     commander looks at the field and picks an order for the whole force, the
+     way the player does with one key. This is what makes an enemy house
+     arrive as a battle line and hold a position, instead of leaking units
+     forward one at a time.
+  */
+  _foeDoctrine(dt) {
+    this._foeThink = (this._foeThink || 0) - dt;
+    if (this._foeThink > 0) return;
+    this._foeThink = 1.6 + this.rng() * 0.9;
+
+    const foe = this.foeArmy;
+    if (!foe.live.length) return;
+
+    const doc = this.director.doctrine || {};
+    const myBanner = this.allStructures.find(s => s.kind === 'banner' && s.team === 0 && s.alive);
+    if (!myBanner) return;
+
+    // where is the fighting?
+    const mine = this.units.filter(u => u.team === 0 && u.alive && u.ready);
+    let fx = 0, fz = 0;
+    for (const u of mine) { fx += u.x; fz += u.z; }
+    const front = mine.length
+      ? { x: fx / mine.length, z: fz / mine.length }
+      : { x: myBanner.x, z: myBanner.z };
+
+    // a defensive house holds ground near its own banner and lets you come
+    const ownBanner = this.allStructures.find(s => s.kind === 'banner' && s.team === 1 && s.alive);
+    const defensive = doc.defensive || doc.holdPoints;
+    const pressing = doc.relentless || (doc.aggression ?? 0.7) > 0.8;
+
+    if (defensive && ownBanner && mine.length && Math.hypot(front.x - ownBanner.x, front.z - ownBanner.z) > 26) {
+      foe.setFormation(doc.wallFormation || 'shieldwall');
+      foe.issue(ORDER.HOLD, { x: ownBanner.x, z: ownBanner.z - 12 });
+      return;
+    }
+
+    if (pressing && mine.length) {
+      foe.setFormation(doc.chargeFormation || 'wedge');
+      foe.issue(ORDER.ADVANCE, front);
+      return;
+    }
+
+    foe.setFormation(doc.marchFormation || 'line');
+    foe.issue(ORDER.ADVANCE, mine.length ? front : { x: myBanner.x, z: myBanner.z });
   }
 
   /* -------------------------------------------------------------- waves

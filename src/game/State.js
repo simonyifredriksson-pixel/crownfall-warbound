@@ -51,6 +51,9 @@ export function newProfile() {
     skills: {},
 
     /* knowledge */
+    // formations Captain Roon has drilled you in. You start knowing the line
+    // and the column, which is what any levy knows; everything else is taught.
+    drills: [],
     research: [],
     recipes: [],
     codex: { units: [], factions: [], lore: [], entries: [] },
@@ -550,6 +553,23 @@ class GameState {
   }
 
   recomputeBonuses() { this.bonuses = foldResearch(this.s.research); return this.bonuses; }
+
+  /* ------------------------------------------------------------- drills */
+
+  knowsDrill(id) { return this.s.drills.includes(id); }
+
+  drillCost(f) {
+    return { gold: f.drillGold ?? 400, scroll: f.drillScroll ?? 1 };
+  }
+
+  learnDrill(id, cost) {
+    if (this.knowsDrill(id)) return false;
+    if (cost && !this.pay(cost, 'drill')) return false;
+    this.s.drills.push(id);
+    bus.emit(EV.DRILL_LEARNED, { id });
+    this.mark();
+    return true;
+  }
 
   /* --------------------------------------------------------- commander */
 

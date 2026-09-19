@@ -32,6 +32,7 @@ import { ScreenEquip } from './ui/ScreenEquip.js';
 import { ScreenMap, openBriefing } from './ui/ScreenMap.js';
 import { ScreenResults } from './ui/ScreenResults.js';
 import { ScreenShop } from './ui/ScreenShop.js';
+import { ScreenDrill } from './ui/ScreenDrill.js';
 
 import { Hub } from './world/Hub.js';
 import { closeDialogue, dialogueOpen } from './world/NPCs.js';
@@ -39,10 +40,13 @@ import { Tutorial } from './game/Tutorial.js';
 import { Objective } from './ui/Objective.js';
 
 import { Battle } from './battle/Battle.js';
+import { ORDER } from './battle/Command.js';
+import { knownFormations } from './data/Formations.js';
 import { wireQuests, processBattleResult } from './game/Progression.js';
 import { UNITS } from './data/Units.js';
 import { POTIONS } from './data/Items.js';
 import { REGIONS, findNode, endlessWave } from './data/Campaign.js';
+import { COMMANDERS, commanderStats } from './data/Commanders.js';
 import { FACTIONS } from './data/Factions.js';
 import { Thumbs } from './ui/Thumbs.js';
 
@@ -294,6 +298,7 @@ class Game {
       case 'openArmy': UI.open(ScreenArmy, { tab: 'deck' }); break;
       case 'openCollection': UI.open(ScreenArmy, { tab: 'collection' }); break;
       case 'openTraining': case 'training': this.startTraining(); break;
+      case 'drill': case 'openDrill': case 'formations': UI.open(ScreenDrill); break;
       default: break;
     }
   }
@@ -384,13 +389,23 @@ class Game {
       };
       field = 'open'; atmos = 'greenmarch'; subtitle = 'Sparring';
     } else {
+      /* A house battle is a fight against a PERSON. The node names a
+         commander; we build them a real stat block and put them on the field,
+         and killing them ends the battle — you do not have to grind the whole
+         army down once its commander is dead. */
+      const cdr = node.commander ? COMMANDERS[node.commander] : null;
       enemy = {
         faction: node.faction, deck: node.enemyDeck || [], level: node.level || 1,
         boss: node.boss, modifiers: node.modifiers || [],
         // A node with `waves` is a teaching battle: Battle swaps the free-form
         // enemy director for the scripted one.
         waves: node.waves, waveLeadIn: node.waveLeadIn,
-        commanderStats: node.type === 'boss' ? null : null,
+        commanderStats: cdr ? commanderStats(cdr, node.level) : null,
+        commanderName: cdr ? cdr.name : null,
+        commanderEquipped: cdr ? cdr.equipped : null,
+        commanderDoctrine: cdr ? cdr.doctrine : null,
+        commanderDecisive: !!cdr,
+        formation: node.enemyFormation,
       };
       field = node.field || 'open';
       atmos = region?.id || 'greenmarch';
@@ -542,6 +557,7 @@ class Game {
       for (let i = 0; i < 5; i++) {
         if (input.pressed('Digit' + (i + 1))) this.hud.arm(i);
       }
+      this._commandKeys(b);
     }
 
     /* ----------------------------------------------------------- aiming
@@ -581,6 +597,63 @@ class Game {
       dodge: !blocked && input.pressed('Space'),
       ability, potion,
     };
+  }
+
+  /* ------------------------------------------------------------- orders
+
+     You are the commander. These are the words you shout, and they are the
+     whole reason the army is yours rather than a set of independently
+     suicidal individuals.
+
+       F  cycle formation        G  hold this ground
+       V  follow me              B  advance on the crosshair
+       N  charge                 M  fall back
+       T  select the next squad (or the whole army)
+
+     Z/X/C stay on the potion belt: taking keys the player already knows and
+     reassigning them is how you make a control scheme feel unreliable.
+  */
+  _commandKeys(b) {
+    const army = b.army;
+    if (!army) return;
+
+    if (input.pressed('KeyT')) {
+      const i = army.cycleSelection();
+      const sq = army.live[i];
+      this.hud.orderFeedback(i < 0 ? 'Whole army' : `${sq.name} squad`, 'select');
+      audio.play('ui.click');
+      return;
+    }
+
+    if (input.pressed('KeyF')) {
+      const known = knownFormations(State.s);
+      if (known.length) {
+        const cur = army.selected >= 0
+          ? army.live[army.selected].formationId
+          : army.formationId;
+        const at = Math.max(0, known.findIndex(f => f.id === cur));
+        const next = known[(at + 1) % known.length];
+        army.setFormation(next.id);
+        this.hud.orderFeedback(next.name, 'formation');
+        audio.play('ui.click');
+      } else {
+        UI.toast('Captain Roon has not drilled you in any formations yet', 'bad');
+      }
+      return;
+    }
+
+    const ground = this._pickGround();
+    const order = (kind, mark, label) => {
+      const n = army.issue(kind, mark);
+      if (n) { this.hud.orderFeedback(label, 'order'); audio.play('horn'); }
+      else UI.toast('Nothing deployed to command', 'bad');
+    };
+
+    if (input.pressed('KeyG')) order(ORDER.HOLD, null, 'Hold ground');
+    else if (input.pressed('KeyV')) order(ORDER.FOLLOW, null, 'Follow me');
+    else if (input.pressed('KeyB') && ground) order(ORDER.ADVANCE, ground, 'Advance');
+    else if (input.pressed('KeyN')) order(ORDER.CHARGE, null, 'Charge!');
+    else if (input.pressed('KeyM')) order(ORDER.FALLBACK, null, 'Fall back');
   }
 
   /**

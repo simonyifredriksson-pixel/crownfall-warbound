@@ -811,6 +811,106 @@ body{ user-select:none; cursor:default }
 .firstkeys{ display:flex; flex-direction:column; gap:10px; font-size:13.5px; color:var(--vel-1) }
 
 /* =========================================================================
+   ARMY COMMAND
+   Who you are talking to, what shape they are in, and what you last told
+   them. It sits on the right so it never fights the objective panel.
+   ========================================================================= */
+.cmdpanel{
+  position:fixed; top:74px; right:16px; z-index:16; width:236px;
+  border-radius:var(--r-md); overflow:hidden;
+  background:linear-gradient(180deg,rgba(20,23,30,.94),rgba(9,11,14,.96));
+  border:1px solid #3a4150; border-right:3px solid var(--sky);
+  box-shadow:var(--shadow-2); font-family:var(--f-ui);
+}
+.cmdpanel.hidden{ display:none }
+.cp-head{
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+  padding:6px 9px 5px; background:#ffffff08;
+}
+.cp-sel{ font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--sky) }
+.cp-key{ font-size:10px; color:var(--iron-lo); display:flex; align-items:center; gap:4px }
+.cp-row{
+  display:flex; align-items:center; gap:7px; padding:4px 9px;
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--vel-3);
+}
+.cp-lab{ width:64px; flex:none }
+.cp-val{ flex:1; color:var(--vel-0); font-weight:600; letter-spacing:.06em }
+.cp-squads{ padding:4px 6px 2px; display:flex; flex-direction:column; gap:2px }
+.cps{
+  display:flex; align-items:center; gap:6px; padding:3px 6px; border-radius:var(--r-sm);
+  font-size:10.5px; letter-spacing:.06em; color:var(--vel-3); background:#ffffff06;
+}
+.cps.on{ background:#5aa6d826; color:var(--vel-0); box-shadow:inset 0 0 0 1px #5aa6d866 }
+.cps-n{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--vel-1) }
+.cps-c{ font-family:var(--f-mono); color:var(--gold) }
+.cps-f,.cps-o{ font-size:9.5px; text-transform:uppercase; opacity:.75 }
+.cp-keys{
+  display:flex; flex-wrap:wrap; gap:4px 8px; padding:6px 9px 8px;
+  border-top:1px solid #ffffff10; font-size:9.5px; color:var(--iron-lo);
+}
+.cp-keys span{ display:flex; align-items:center; gap:3px }
+.cp-keys .kbd,.cp-key .kbd{
+  min-width:15px; height:15px; padding:0 3px; font-size:9px; border-radius:3px;
+  display:inline-grid; place-items:center; background:#2a2f3a; color:var(--vel-2);
+  border:1px solid #3d4453; font-family:var(--f-mono);
+}
+
+/* the shout: brief, large, unmissable */
+.orderflash{
+  position:fixed; left:50%; top:30%; transform:translate(-50%,0) scale(.9); z-index:18;
+  pointer-events:none; opacity:0;
+  font-family:var(--f-display); font-weight:900; font-size:38px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold-hi); text-shadow:0 4px 18px #000, 0 0 40px #d9a44160;
+}
+.orderflash.go{ animation:orderFlash 1.1s var(--ease) }
+.orderflash.formation{ color:var(--sky); text-shadow:0 4px 18px #000, 0 0 40px #5aa6d860 }
+.orderflash.select{ color:var(--vel-0); font-size:26px }
+@keyframes orderFlash{
+  0%{ opacity:0; transform:translate(-50%,10px) scale(.86) }
+  18%{ opacity:1; transform:translate(-50%,0) scale(1) }
+  70%{ opacity:1 }
+  100%{ opacity:0; transform:translate(-50%,-10px) scale(1.02) }
+}
+
+/* =========================================================================
+   THE DRILL GROUND
+   ========================================================================= */
+.drillgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:12px }
+.drillcard{
+  display:flex; gap:12px; padding:12px; border-radius:var(--r-md);
+  background:linear-gradient(180deg,#171a21,#0e1014);
+  border:1px solid #2c323d;
+}
+.drillcard.known{ border-color:#5a4a1e; background:linear-gradient(180deg,#1c1b16,#0f0e0b) }
+.drillcard.poor{ opacity:.72 }
+.dc-art{
+  flex:none; width:132px; height:132px; border-radius:var(--r-sm);
+  background:radial-gradient(circle at 50% 42%, #202633, #0c0e13);
+  display:grid; place-items:center; box-shadow:inset 0 0 0 1px #ffffff0c;
+}
+.formdiag{ width:128px; height:128px }
+.formdiag circle{ fill:var(--iron) }
+.formdiag circle.lead{ fill:var(--gold) }
+.formdiag .facing{ fill:var(--sky); opacity:.7 }
+.dc-body{ flex:1; min-width:0 }
+.dc-head{ display:flex; align-items:center; justify-content:space-between; gap:8px }
+.dc-head h3{ margin:0; font-family:var(--f-display); font-size:17px; letter-spacing:.1em; color:var(--vel-0) }
+.dc-blurb{ font-style:italic; font-size:12.5px; color:var(--gold); margin-top:2px }
+.dc-desc{ font-size:12.5px; line-height:1.55; color:var(--vel-2); margin:6px 0 0 }
+.dc-trade{ margin-top:7px; font-size:12px; line-height:1.5 }
+.dc-trade .good{ color:#8fe09a } .dc-trade .bad{ color:#f0938a }
+.dc-stats{
+  margin-top:7px; display:flex; flex-wrap:wrap; gap:4px 10px;
+  font-family:var(--f-ui); font-size:10.5px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--vel-3);
+}
+.dc-stats b{ color:var(--vel-0) }
+.dc-quote{
+  margin-top:9px; padding:7px 10px; border-left:2px solid var(--gold-lo);
+  background:#ffffff06; font-style:italic; font-size:12px; color:var(--vel-2); line-height:1.5;
+}
+
+/* =========================================================================
    DIALOGUE
    ========================================================================= */
 .dialogue{

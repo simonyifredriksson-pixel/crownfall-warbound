@@ -85,10 +85,12 @@ export const EV = {
   WAVE_START: 'battle:wave-start',
   WAVE_CLEAR: 'battle:wave-clear',
   UNIT_DEPLOYED: 'battle:unit-deployed',    // the PLAYER placed a card
+  ARMY_ORDER: 'battle:army-order',          // the player commanded their army
 
   // onboarding
   TUTORIAL_STEP: 'tut:step',
   TUTORIAL_DONE: 'tut:done',
+  DRILL_LEARNED: 'army:drill',
 
   // world
   ZONE_ENTER: 'world:zone-enter',

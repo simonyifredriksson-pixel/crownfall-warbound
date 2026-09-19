@@ -19,6 +19,8 @@ import { paintPortrait } from './Thumbs.js';
 import { audio } from '../core/Audio.js';
 import { esc, formatTime, clamp, clamp01, formatNum } from '../core/Util.js';
 import { ic } from '../art/Icons.js';
+import { getFormation } from '../data/Formations.js';
+import { ORDER_INFO } from '../battle/Command.js';
 
 const _v = new THREE.Vector3();
 
@@ -86,6 +88,30 @@ export class BattleHud {
       </div>
 
       <div class="deployhint" id="h-deployhint">Click the ground inside your zone to deploy</div>
+
+      <!-- the command panel: what your army is doing, and how to change it -->
+      <div class="cmdpanel" id="h-cmd-panel">
+        <div class="cp-head">
+          <span class="cp-sel" id="h-cmd-sel">Whole army</span>
+          <span class="cp-key"><span class="kbd">T</span> select</span>
+        </div>
+        <div class="cp-row">
+          <span class="cp-lab">Formation</span>
+          <span class="cp-val" id="h-cmd-form">Line</span>
+          <span class="kbd">F</span>
+        </div>
+        <div class="cp-row">
+          <span class="cp-lab">Order</span>
+          <span class="cp-val" id="h-cmd-order">Follow Me</span>
+        </div>
+        <div class="cp-squads" id="h-cmd-squads"></div>
+        <div class="cp-keys">
+          <span><span class="kbd">V</span>follow</span><span><span class="kbd">G</span>hold</span>
+          <span><span class="kbd">B</span>advance</span><span><span class="kbd">N</span>charge</span>
+          <span><span class="kbd">M</span>back</span>
+        </div>
+      </div>
+      <div class="orderflash" id="h-orderflash"></div>
     `;
 
     this.$ = id => this.el.querySelector('#' + id);
@@ -281,6 +307,8 @@ export class BattleHud {
       this.$('h-time').textContent = Math.ceil(b.countdown);
     }
 
+    this._updateCommand();
+
     /* command */
     const cmd = b.command[0];
     this.$('h-cmd').style.width = (cmd / CFG.battle.commandMax * 100).toFixed(1) + '%';
@@ -399,6 +427,51 @@ export class BattleHud {
 
   _updateLog() { /* entries expire on their own timers */ }
 
+  /* ------------------------------------------------------------ command */
+
+  /**
+   * The army panel. It answers the two questions you have while commanding:
+   * who am I talking to, and what did I just tell them to do.
+   */
+  _updateCommand() {
+    const army = this.b.army;
+    if (!army) return;
+    const live = army.live;
+    const sel = army.selected >= 0 ? live[army.selected] : null;
+
+    this.$('h-cmd-panel').classList.toggle('hidden', !live.length);
+    if (!live.length) return;
+
+    this.$('h-cmd-sel').textContent = sel ? `${sel.name} squad` : `Whole army — ${live.length} squads`;
+    this.$('h-cmd-form').textContent = getFormation(sel ? sel.formationId : army.formationId).name;
+    this.$('h-cmd-order').textContent = ORDER_INFO[sel ? sel.order : army.order]?.name || '—';
+
+    const host = this.$('h-cmd-squads');
+    const sig = live.map(s => `${s.cardId}${s.living.length}${s.formationId}${s.order}`).join('|') + army.selected;
+    if (host.dataset.sig !== sig) {
+      host.dataset.sig = sig;
+      host.innerHTML = live.map((s, i) => `
+        <div class="cps${i === army.selected ? ' on' : ''}">
+          <span class="cps-n">${esc(s.name)}</span>
+          <span class="cps-c">${s.living.length}</span>
+          <span class="cps-f">${esc(getFormation(s.formationId).name)}</span>
+          <span class="cps-o">${esc(ORDER_INFO[s.order]?.name || '')}</span>
+        </div>`).join('');
+    }
+  }
+
+  /** A big, brief confirmation that the army heard you. */
+  orderFeedback(text, kind) {
+    const el = this.$('h-orderflash');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'orderflash ' + (kind || '');
+    void el.offsetWidth;
+    el.classList.add('go');
+    clearTimeout(this._orderT);
+    this._orderT = setTimeout(() => el.classList.remove('go'), 1100);
+  }
+
   /* -------------------------------------------------------------- hints */
 
   showTutorial(key) {
@@ -448,6 +521,7 @@ export class BattleHud {
 
   destroy() {
     clearTimeout(this._teachT);
+    clearTimeout(this._orderT);
     this.el.remove();
     for (const e of this.floaterEls) e.remove();
     this.floaterEls.length = 0;

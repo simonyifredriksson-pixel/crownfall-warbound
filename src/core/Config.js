@@ -38,7 +38,10 @@ export const CFG = {
     deployMargin: 1.6,       // how far from the deploy line you may drop
     deployDelaySec: 0.85,    // spawn wind-up before a unit can act
     corpseLinger: 9,         // seconds a corpse stays (necromancy fodder)
-    maxUnitsPerSide: 42,
+    // Cards are SQUADS now — one Knight card is eight men — so the old ceiling
+    // of 42 was reached by five deployments. An army has to be allowed to look
+    // like an army.
+    maxUnitsPerSide: 84,
     gridCell: 4,             // spatial hash cell size, world units
     baseCrit: 0.05,
     critMult: 1.55,

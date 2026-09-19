@@ -1045,6 +1045,7 @@ export function buildTraining() {
     doors: [{ x: 0, z: 16, to: 'keep', label: 'Courtyard', icon: ic('castle'), exit: true }],
     interactables: [
       { x: 0, z: -6, r: 4.0, label: 'Sparring Ground', sub: 'Practice battle', key: 'E', icon: ic('swords'), action: 'training' },
+      { x: -11, z: 2, r: 3.0, label: 'The Drill Field', sub: 'Learn formations', key: 'E', icon: ic('angle'), action: 'drill' },
       { x: 11, z: 2, r: 2.8, label: 'Counter Table', sub: 'Damage and armour reference', key: 'E', icon: ic('book'), action: 'counters' },
     ],
     npcs: [{ id: 'drillmaster', x: -2.4, z: -3, facing: 0.6 }],
